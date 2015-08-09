@@ -29,3 +29,6 @@ class TestWiki(unittest.TestCase):
         first = x[0]
         self.assertEqual(first, wiki.next_gem(200, x))
         
+        while len(x) != 0:
+            print (wiki.next_gem(600, x))
+        

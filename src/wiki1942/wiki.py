@@ -4,7 +4,7 @@ import wikipedia
 MAX_LEVEL_TIME = 600 #seconds
 
 def next_gem(current_time, gems):
-    if gems[0][1] < current_time:
+    if gems[0][1] <= current_time:
         return gems.pop(0)
     else:
         return None
