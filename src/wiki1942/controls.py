@@ -15,7 +15,7 @@ class GameControl:
         self.clock = pygame.time.Clock()
         self.screen = screen
         
-        self.gem = sprites.Gem()
+        self.gem = sprites.Gem("patate")
         
     def reset(self):
         self.key_down = False
@@ -56,7 +56,6 @@ class GameControl:
         self.screen.fill((0,0,0))
         self.gem.update(tick)
         self.screen.blit(self.gem.image, (110,110,32,32))
-
         pygame.display.update()
         pygame.time.delay(16)
         return tick
