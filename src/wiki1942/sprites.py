@@ -63,18 +63,7 @@ class Gem(pygame.sprite.Sprite):
                 self.image_cursor = 0
         self.image = self.frames[self.image_cursor]
         self.rect.y += self.speed / tick
-        
-class MainAircraft(pygame.sprite.Sprite):
-    
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.base_image = media.B29
-        self.image = self.base_image
-        
-        
-    def update(self, tick):
-        pass
-    
+            
 class Aircraft(pygame.sprite.Sprite):
     
     def __init__(self, number):
@@ -83,7 +72,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.base_image = getattr(media, "Aircraft_" + number)
         self.rotor_image = getattr(media, "rotor" + number)
         self.hit_image = getattr(media, "Aircraft_" + number + "_hit")
-        self.frames = (self.create_image(True), self.create_image(False))
+        self.frames = [self.create_image(True), self.create_image(False)]
+        
         self.image = self.frames[0]
         self.show_rotor = True
         self.rotor_tick = ROTOR_ROTATE_TICK
@@ -97,7 +87,7 @@ class Aircraft(pygame.sprite.Sprite):
         
         colorkey = self.base_image.get_at((0,0))        
         image.set_colorkey(colorkey, pygame.RLEACCEL)
-        return image
+        return pygame.transform.rotate(image, 180)
 
     def draw_rotor(self, image):
         pass
@@ -199,6 +189,8 @@ class Aircraft10(Aircraft):
     
     def __init__(self):
         Aircraft.__init__(self, 10)
+        self.frames[0] = pygame.transform.rotate(self.frames[0], 180)
+        self.frames[1] = pygame.transform.rotate(self.frames[1], 180)
         
     def draw_rotor(self, image):
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())
