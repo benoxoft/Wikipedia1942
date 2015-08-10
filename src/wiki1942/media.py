@@ -7,17 +7,22 @@ m = sys.modules[__name__]
 
 def load_image(img):
     image = pygame.image.load(img)
+    #colorkey = image.get_at((0,0))        
+    #image.set_colorkey(colorkey, pygame.RLEACCEL)
     return image
 
 def load_all_images():
-    for f in os.listdir(os.path.join('media', 'images')):
-        if f == '.DS_Store':
+    for d in os.listdir(os.path.join('media', 'images')):
+        if d == '.DS_Store':
             continue
-        filename, _ = os.path.splitext(f)
-        fullf = os.path.abspath(os.path.join('media', 'images', f))
-        if hasattr(m, filename):
-            delattr(m, filename)
-        setattr(m, filename, load_image(fullf))
+        for f in os.listdir(os.path.join('media', 'images', d)):
+            if f == '.DS_Store':
+                continue
+            filename, _ = os.path.splitext(f)
+            fullf = os.path.abspath(os.path.join('media', 'images', d, f))
+            if hasattr(m, filename):
+                delattr(m, filename)
+            setattr(m, filename, load_image(fullf))
 
 def load_sound(snd):
     return pygame.mixer.Sound(snd)

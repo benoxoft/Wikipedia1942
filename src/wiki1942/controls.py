@@ -16,6 +16,7 @@ class GameControl:
         self.screen = screen
         
         self.gem = sprites.Gem("patate")
+        self.plane = sprites.EnemyAircraft01()
         
     def reset(self):
         self.key_down = False
@@ -53,9 +54,12 @@ class GameControl:
     
     def update(self):
         tick = self.clock.tick()
-        self.screen.fill((0,0,0))
+        self.screen.fill((110,110,0))
         self.gem.update(tick)
+        self.plane.update(tick)
+        
         self.screen.blit(self.gem.image, (110,110,32,32))
+        self.screen.blit(self.plane.image, (310,310,self.plane.image.get_rect().w,self.plane.image.get_rect().h))
         pygame.display.update()
         pygame.time.delay(16)
         return tick

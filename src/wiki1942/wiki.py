@@ -1,7 +1,7 @@
 import random
 import wikipedia
 
-MAX_LEVEL_TIME = 600 #seconds
+MAX_LEVEL_TIME = 600000
 
 def next_gem(current_time, gems):
     if gems[0][1] <= current_time:
@@ -15,8 +15,8 @@ def randomize_page():
 def gemify_page(wiki_page):
     links_len = len(wiki_page.links)
     spawn_time = MAX_LEVEL_TIME / links_len
-    if spawn_time > 10:
-        spawn_time = 10
+    if spawn_time > 10000:
+        spawn_time = 10000
     
     links = [[link,] for link in wiki_page.links]
     random.shuffle(links)
