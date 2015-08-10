@@ -7,6 +7,9 @@ import random
 #http://opengameart.org/content/wwii-top-down-usaaf-bombers
 #http://opengameart.org/content/wwii-top-down-usaaf-bombers
 
+#http://opengameart.org/content/orthographic-outdoor-tiles
+#http://opengameart.org/content/fluffy-clouds
+
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
 GEM_FONT_SIZE = 8
@@ -62,11 +65,13 @@ class MainAircraft(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.base_image = media.B29
+        self.image = self.base_image
+        
         
     def update(self, tick):
         pass
     
-class EnemyAircraft01(pygame.sprite.Sprite):
+class Aircraft01(pygame.sprite.Sprite):
     
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -102,4 +107,69 @@ class EnemyAircraft01(pygame.sprite.Sprite):
         else:
             self.image = self.frames[1]
         
+class Aircraft02(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.Aircraft_02
+        self.rotor_image = media.rotor02
+        self.hit_image = media.Aircraft_02_hit
+        self.frames = (self.create_image(True), self.create_image(False))
+        self.image = self.frames[0]
+        self.show_rotor = True
+        self.rotor_tick = ROTOR_ROTATE_TICK
+        
+    def create_image(self, show_rotor):
+        image = pygame.Surface(self.base_image.get_size()).convert()
+        image.blit(self.base_image, (0, 0), self.base_image.get_rect())
+        
+        if show_rotor:
+            image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2 - 26, 10), self.rotor_image.get_rect())
+            image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2 + 2, 0), self.rotor_image.get_rect())
+            image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2 + 32, 10), self.rotor_image.get_rect())
+
+        colorkey = self.base_image.get_at((0,0))        
+        image.set_colorkey(colorkey, pygame.RLEACCEL)
+        return image
+    
+    def update(self, tick):
+        self.rotor_tick -= tick
+        if self.rotor_tick <= 0:
+            self.rotor_tick = ROTOR_ROTATE_TICK
+            self.show_rotor = not self.show_rotor
+        if self.show_rotor:
+            self.image = self.frames[0]
+        else:
+            self.image = self.frames[1]
+            
+class Background(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        self.image = media.map1
+        self.tick_count = 0
+        self.rect = pygame.Rect((0, 2480, 1024, 720))
+        
+    def update(self, tick):
+        self.tick_count += tick
+        self.rect.y = 2480 - 2480 * self.tick_count / 600000.0
+
+class EndlessCloud(pygame.sprite.Sprite):
+    
+    def __init__(self, delay=0):
+        self.delay = delay
+        self.reset()
+        
+    def reset(self):
+        number = random.randint(1, 4)
+        self.image = getattr(media, "cloud" + str(number))
+        self.speed = random.randint(50, 100)
+        self.rect = pygame.Rect((random.randint(0, 1000) - 500, -self.image.get_rect().h, self.image.get_rect().w, self.image.get_rect().h))
+    
+    def update(self, tick):
+        if self.delay > 0:
+            self.delay -= tick
+            return
+        self.rect.y += self.speed / tick
+        if self.rect.y >= 720:
+            self.reset()
     

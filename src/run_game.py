@@ -9,7 +9,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 
 pygame.init()
 pygame.mixer.init()
-screen = pygame.display.set_mode((800,600), pygame.HWSURFACE)
+screen = pygame.display.set_mode((1024,720), pygame.HWSURFACE)
 pygame.display.set_caption("Wiki 1942")
 
 def main():
