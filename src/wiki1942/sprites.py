@@ -10,7 +10,7 @@ import random
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
 GEM_FONT_SIZE = 8
-TOOLTIP_WIDTH = 100
+TOOLTIP_WIDTH = 400
 GEM_COLORS = ("blue", "green", "grey", "orange", "pink", "yellow")
 GEM_FONT_COLOR = (255, 255, 255)
 
@@ -32,7 +32,7 @@ class Gem(pygame.sprite.Sprite):
         self.frames = self.create_frames()
         self.image = self.frames[0]
         self.speed = random.randint(100, 200)
-        self.rect = pygame.Rect((random.randint(120, 660), -760, self.image.get_rect().w, self.image.get_rect().h))
+        self.rect = pygame.Rect((random.randint(120, 660), -760, self.size, self.size))
         
     def create_frames(self):
         return [self.create_gem_frame(i) for i in range(0, GEM_FRAMES)]
@@ -40,17 +40,16 @@ class Gem(pygame.sprite.Sprite):
     def create_name(self):
         font = media.get_font(GEM_FONT_SIZE)
         s = font.render(self.name, True, GEM_FONT_COLOR)
-        image = pygame.Surface((TOOLTIP_WIDTH, GEM_FONT_SIZE))
-        image.blit(s, (s.get_rect().w / 2.0, 0), s.get_rect())
-        return image
+        return s
     
     def create_gem_frame(self, position):
         rect = pygame.Rect(self.size * position, 0, self.size, self.size)
-        image = pygame.Surface((100, self.size + GEM_FONT_SIZE)).convert()
-        image.blit(self.base_image, ((TOOLTIP_WIDTH - self.size) / 2, 0), rect)
+        tooltip = self.create_name()
+        image = pygame.Surface((tooltip.get_rect().w, self.size + GEM_FONT_SIZE)).convert()
+        image.blit(self.base_image, ((tooltip.get_rect().w - self.size) / 2, 0), rect)
         colorkey = self.base_image.get_at((0,0))        
         image.set_colorkey(colorkey, pygame.RLEACCEL)
-        tooltip = self.create_name()
+        
         image.blit(tooltip, (0, self.size), tooltip.get_rect())
         return image
     
@@ -78,7 +77,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.show_rotor = True
         self.rotor_tick = ROTOR_ROTATE_TICK
         
-        self.rect = pygame.Rect(0, 0, self.image.get_rect().w, self.image.get_rect().h)
+        self.rect = pygame.Rect(5, 10, self.image.get_rect().w - 10, self.image.get_rect().h - 35)
         
     def create_image(self, show_rotor):
         image = pygame.Surface(self.base_image.get_size()).convert()

@@ -1,5 +1,6 @@
 import pygame
 import sprites
+import wiki
 
 class GameControl:
     
@@ -7,64 +8,66 @@ class GameControl:
         self.clock = pygame.time.Clock()
         self.screen = screen
         
-        self.gem = sprites.Gem("patate")
         self.bg = sprites.Background()
-        self.plane1 = sprites.Aircraft01()
-        self.plane2 = sprites.Aircraft02()
-        self.plane3 = sprites.Aircraft03()
-        self.plane4 = sprites.Aircraft04()
-        self.plane5 = sprites.Aircraft05()
-        self.plane6 = sprites.Aircraft06()
-        self.plane7 = sprites.Aircraft07()
-        self.plane8 = sprites.Aircraft08()
-        self.plane9 = sprites.Aircraft09()
         self.cloud = sprites.EndlessCloud()
+        self.player = Player()
+        self.player_group = pygame.sprite.Group()
+        self.player_group.add(self.player)
+        self.enemy = Enemy()
+        self.gems = GemFactory()
         
-        self.bullets = pygame.sprite.Group()
-        self.player = Player(self.bullets)
-                
+    def manage_collisions(self):
+        for gem in pygame.sprite.groupcollide(self.gems.gems, self.player_group, True, False):
+            self.player.add_gem(gem)
+        
     def update(self):
         tick = self.clock.tick(24)
-
-        self.screen.fill((110,110,0))
-        self.gem.update(tick)
-        self.plane1.update(tick)
-        self.plane2.update(tick)
-        self.plane3.update(tick)
-        self.plane4.update(tick)
-        self.plane5.update(tick)
-        self.plane6.update(tick)
-        self.plane7.update(tick)
-        self.plane8.update(tick)
-        self.plane9.update(tick)
+        
         self.player.update(tick)
         self.bg.update(tick)
         self.cloud.update(tick)
-        self.bullets.update(tick)
+        self.gems.update(tick)
         self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
         self.screen.blit(self.cloud.image, self.cloud.rect)
 
-        self.screen.blit(self.gem.image, self.gem.rect)
         self.screen.blit(self.player.image, self.player.rect)
-        self.screen.blit(self.plane1.image, (110,110,self.plane1.image.get_rect().w,self.plane1.image.get_rect().h))
-        self.screen.blit(self.plane2.image, (220,110,self.plane2.image.get_rect().w,self.plane2.image.get_rect().h))
-        self.screen.blit(self.plane3.image, (330,110,self.plane3.image.get_rect().w,self.plane3.image.get_rect().h))
-        self.screen.blit(self.plane4.image, (440,110,self.plane4.image.get_rect().w,self.plane4.image.get_rect().h))
-        self.screen.blit(self.plane5.image, (550,110,self.plane5.image.get_rect().w,self.plane5.image.get_rect().h))
-        self.screen.blit(self.plane6.image, (660,110,self.plane6.image.get_rect().w,self.plane6.image.get_rect().h))
-        self.screen.blit(self.plane7.image, (110,220,self.plane7.image.get_rect().w,self.plane7.image.get_rect().h))
-        self.screen.blit(self.plane8.image, (220,220,self.plane8.image.get_rect().w,self.plane8.image.get_rect().h))
-        self.screen.blit(self.plane9.image, (330,220,self.plane9.image.get_rect().w,self.plane9.image.get_rect().h))
-        self.bullets.draw(self.screen)
+        self.player.bullets.draw(self.screen)
+        self.gems.gems.draw(self.screen)
         
+        self.manage_collisions()
         pygame.display.update()
     
+class GemFactory(pygame.sprite.Group):
+    
+    def __init__(self):
+        self.gems = pygame.sprite.Group()
+        self.current_page = wiki.randomize_page()
+        self.links = wiki.gemify_page(self.current_page)
+        self.tick_count = 0
+        
+    def update(self, tick):
+        self.tick_count += tick
+        gem = wiki.next_gem(self.tick_count, self.links)
+        if gem is not None:
+            gem_sprite = sprites.Gem(gem)
+            self.gems.add(gem_sprite)
+        self.gems.update(tick)
+        
 class AircraftAI:
     pass
 
+class Enemy():
+    
+    def __init__(self):
+        self.bullets = pygame.sprite.Group()
+        self.planes = pygame.sprite.Group()
+        
+    def update(self, tick):
+        pass
+    
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self, bullets_group):
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         
         self.key_down = False
@@ -78,9 +81,13 @@ class Player(pygame.sprite.Sprite):
         self.quit = False
         self.tick_count = 0
         self.main_plane = sprites.Aircraft10()
-        self.bullets = bullets_group
+        self.bullets = pygame.sprite.Group()
         self.image = self.main_plane.image
         self.rect = self.main_plane.rect
+        self.gems = []
+        
+    def add_gem(self, gem):
+        self.gems.append(gem)
         
     def reset(self):
         self.key_down = False
@@ -118,7 +125,7 @@ class Player(pygame.sprite.Sprite):
     
     def shoot_bullet(self, tick):
         if self.tick_count <= 0:
-            self.bullets.add(sprites.BlueBullet(True, (self.main_plane.rect.x + self.main_plane.rect.w / 2, self.main_plane.rect.y)))
+            self.bullets.add(sprites.BlueBullet(True, (self.main_plane.rect.x + self.main_plane.rect.w / 2 - 4, self.main_plane.rect.y - 20)))
             self.tick_count = 60
     
     def move_main_plane_mouse(self, tick):
@@ -150,6 +157,7 @@ class Player(pygame.sprite.Sprite):
                 self.main_plane.rect.y += move
         
     def update(self, tick):
+        self.bullets.update(tick)
         self.move_main_plane_mouse(tick)
         if self.key_space:
             self.shoot_bullet(tick)
@@ -158,4 +166,3 @@ class Player(pygame.sprite.Sprite):
         
         self.image = self.main_plane.image
         self.rect = self.main_plane.rect
-        

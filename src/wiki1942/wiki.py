@@ -5,7 +5,7 @@ MAX_LEVEL_TIME = 600000
 
 def next_gem(current_time, gems):
     if gems[0][1] <= current_time:
-        return gems.pop(0)
+        return gems.pop(0)[0]
     else:
         return None
 
@@ -21,7 +21,7 @@ def gemify_page(wiki_page):
     links = [[link,] for link in wiki_page.links]
     random.shuffle(links)
     for i in range(0, links_len):
-        links[i].append(spawn_time * (i+1))
+        links[i].append(spawn_time * i)
     return links
 
 def open_page(page_title):
