@@ -6,6 +6,7 @@ import random
 #http://opengameart.org/content/aircrafts
 #http://opengameart.org/content/orthographic-outdoor-tiles
 #http://opengameart.org/content/fluffy-clouds
+#http://opengameart.org/content/10-basic-message-boxes
 
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
@@ -32,25 +33,18 @@ class Gem(pygame.sprite.Sprite):
         self.frames = self.create_frames()
         self.image = self.frames[0]
         self.speed = random.randint(100, 200)
-        self.rect = pygame.Rect((random.randint(120, 660), -760, self.size, self.size))
-        
+        self.rect = pygame.Rect((random.randint(120, 660), -60, 32, 32))
+            
     def create_frames(self):
         return [self.create_gem_frame(i) for i in range(0, GEM_FRAMES)]
-    
-    def create_name(self):
-        font = media.get_font(GEM_FONT_SIZE)
-        s = font.render(self.name, True, GEM_FONT_COLOR)
-        return s
-    
+        
     def create_gem_frame(self, position):
         rect = pygame.Rect(self.size * position, 0, self.size, self.size)
-        tooltip = self.create_name()
-        image = pygame.Surface((tooltip.get_rect().w, self.size + GEM_FONT_SIZE)).convert()
-        image.blit(self.base_image, ((tooltip.get_rect().w - self.size) / 2, 0), rect)
+        image = pygame.Surface((self.size, self.size)).convert()
+        image.blit(self.base_image, (0, 0), rect)
         colorkey = self.base_image.get_at((0,0))        
         image.set_colorkey(colorkey, pygame.RLEACCEL)
         
-        image.blit(tooltip, (0, self.size), tooltip.get_rect())
         return image
     
     def update(self, tick):
@@ -62,6 +56,24 @@ class Gem(pygame.sprite.Sprite):
                 self.image_cursor = 0
         self.image = self.frames[self.image_cursor]
         self.rect.y += self.speed / tick
+
+        if self.rect.y > 720:
+            self.kill()
+            
+class GemTooltip(pygame.sprite.Sprite):
+    
+    def __init__(self, gem):
+        pygame.sprite.Sprite.__init__(self)
+        font = media.get_font(GEM_FONT_SIZE)
+        self.image = font.render(gem.name, True, GEM_FONT_COLOR)
+        self.rect = pygame.Rect((gem.rect.x - self.image.get_rect().w / 2, gem.rect.y + gem.size, self.image.get_rect().w, self.image.get_rect().h))
+        self.speed = gem.speed
+        self.gem = gem
+        
+    def update(self, tick):
+        self.rect.y += self.speed / tick
+        if not self.gem.alive():
+            self.kill()
             
 class Aircraft(pygame.sprite.Sprite):
     
@@ -259,4 +271,42 @@ class EndlessCloud(pygame.sprite.Sprite):
         self.rect.y += self.speed / tick
         if self.rect.y >= 720:
             self.reset()
+        
+class StatusBar(pygame.sprite.Sprite):
     
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.status_bar
+        self.image = None
+        self.rect = pygame.Rect(16, 16, self.base_image.get_rect().w, self.base_image.get_rect().h)
+        self.current_page = ""
+        self.links_left = 0
+        self.total_links = 0
+        self.updated = True
+        self.update()
+        
+    def set_current_page(self, current_page):
+        self.current_page = current_page
+        self.updated = True
+    
+    def set_links_left(self, links_left):
+        self.links_left = links_left
+        self.updated = True
+    
+    def set_total_links(self, total_links):
+        self.total_links = total_links
+        self.updated = True
+    
+    def update(self, *args):
+        if not self.updated:
+            return
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
+        self.image.blit(self.base_image, (0,0))
+        font = media.get_font(GEM_FONT_SIZE)
+        page = font.render(self.current_page, True, GEM_FONT_COLOR)
+        self.image.blit(page, (16,16))
+        links = font.render("Links left: " + str(self.links_left) + " / " + str(self.total_links), True, GEM_FONT_COLOR)
+        self.image.blit(links, (16, 32))
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+        

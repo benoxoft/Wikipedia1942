@@ -10,11 +10,15 @@ class GameControl:
         
         self.bg = sprites.Background()
         self.cloud = sprites.EndlessCloud()
+        
         self.player = Player()
         self.player_group = pygame.sprite.Group()
         self.player_group.add(self.player)
         self.enemy = Enemy()
-        self.gems = GemFactory()
+        self.ui_group = pygame.sprite.Group()
+        self.statusbar = sprites.StatusBar()
+        self.ui_group.add(self.statusbar)
+        self.gems = GemFactory(self.statusbar)
         
     def manage_collisions(self):
         for gem in pygame.sprite.groupcollide(self.gems.gems, self.player_group, True, False):
@@ -27,23 +31,32 @@ class GameControl:
         self.bg.update(tick)
         self.cloud.update(tick)
         self.gems.update(tick)
+        self.ui_group.update(tick)
+        
         self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
         self.screen.blit(self.cloud.image, self.cloud.rect)
 
         self.screen.blit(self.player.image, self.player.rect)
         self.player.bullets.draw(self.screen)
         self.gems.gems.draw(self.screen)
+        self.gems.tooltips.draw(self.screen)
+        self.ui_group.draw(self.screen)
         
         self.manage_collisions()
         pygame.display.update()
     
 class GemFactory(pygame.sprite.Group):
     
-    def __init__(self):
+    def __init__(self, statusbar):
         self.gems = pygame.sprite.Group()
+        self.tooltips = pygame.sprite.Group()
         self.current_page = wiki.randomize_page()
         self.links = wiki.gemify_page(self.current_page)
         self.tick_count = 0
+        self.statusbar = statusbar
+        self.statusbar.set_current_page(self.current_page.title)
+        self.statusbar.set_total_links(len(self.links))
+        self.statusbar.set_links_left(len(self.links))
         
     def update(self, tick):
         self.tick_count += tick
@@ -51,7 +64,12 @@ class GemFactory(pygame.sprite.Group):
         if gem is not None:
             gem_sprite = sprites.Gem(gem)
             self.gems.add(gem_sprite)
+            tooltip = sprites.GemTooltip(gem_sprite)
+            self.tooltips.add(tooltip)
+            self.statusbar.set_links_left(len(self.links))
+            
         self.gems.update(tick)
+        self.tooltips.update(tick)
         
 class AircraftAI:
     pass
@@ -77,8 +95,7 @@ class Player(pygame.sprite.Sprite):
         self.key_space = False
         self.keep_playing = True
         self.quit = False
-        self.keep_playing = True
-        self.quit = False
+        self.left_click = False
         self.tick_count = 0
         self.main_plane = sprites.Aircraft10()
         self.bullets = pygame.sprite.Group()
@@ -97,6 +114,7 @@ class Player(pygame.sprite.Sprite):
         self.key_space = False
         
     def manage_key(self, e):
+        
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_a:
                 self.key_down = True
@@ -122,7 +140,11 @@ class Player(pygame.sprite.Sprite):
             elif e.key == pygame.K_ESCAPE:
                 self.keep_playing = False  
                 self.quit = True
-    
+        elif e.type == pygame.MOUSEBUTTONDOWN:
+            pass
+        elif e.type == pygame.MOUSEBUTTONUP:
+            pass
+        
     def shoot_bullet(self, tick):
         if self.tick_count <= 0:
             self.bullets.add(sprites.BlueBullet(True, (self.main_plane.rect.x + self.main_plane.rect.w / 2 - 4, self.main_plane.rect.y - 20)))
@@ -166,3 +188,5 @@ class Player(pygame.sprite.Sprite):
         
         self.image = self.main_plane.image
         self.rect = self.main_plane.rect
+
+    
