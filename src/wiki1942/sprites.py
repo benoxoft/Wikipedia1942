@@ -195,8 +195,8 @@ class Aircraft10(Aircraft):
         self.frames[1] = pygame.transform.rotate(self.frames[1], 180)
         
     def draw_rotor(self, image):
-        image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())
-    
+        image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())    
+
 class Bullet(pygame.sprite.Sprite):
     
     def __init__(self, color, direction, initpos):
@@ -207,13 +207,27 @@ class Bullet(pygame.sprite.Sprite):
         self.image = self.base_image
         self.rect = pygame.Rect(initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h)
         
-        
     def update(self, tick):
         move = BULLET_SPEED / tick
         self.rect.y -= move
         if self.rect.y < 0 or self.rect.y > 720:
             self.kill()
+
+class BlueBullet(Bullet):
     
+    def __init__(self, direction, initpos):
+        Bullet.__init__(self, "blue", direction, initpos)
+
+class PurpleBullet(Bullet):
+    
+    def __init__(self, direction, initpos):
+        Bullet.__init__(self, "purple", direction, initpos)
+        
+class OrangeBullet(Bullet):
+    
+    def __init__(self, direction, initpos):
+        Bullet.__init__(self, "orange", direction, initpos)
+        
 class Background(pygame.sprite.Sprite):
     
     def __init__(self):

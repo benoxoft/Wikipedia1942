@@ -17,9 +17,9 @@ def main():
     
     
     gc = wiki1942.controls.GameControl(screen)
-    while not gc.quit:
+    while not gc.player.quit:
         for e in pygame.event.get():
-            gc.manage_key(e)
+            gc.player.manage_key(e)
         gc.update()
                 
 if __name__ == '__main__':
