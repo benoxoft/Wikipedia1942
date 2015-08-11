@@ -4,9 +4,6 @@ import random
 
 #http://opengameart.org/content/rotating-crystal-animation-8-step
 #http://opengameart.org/content/aircrafts
-#http://opengameart.org/content/wwii-top-down-usaaf-bombers
-#http://opengameart.org/content/wwii-top-down-usaaf-bombers
-
 #http://opengameart.org/content/orthographic-outdoor-tiles
 #http://opengameart.org/content/fluffy-clouds
 
@@ -18,6 +15,9 @@ GEM_COLORS = ("blue", "green", "grey", "orange", "pink", "yellow")
 GEM_FONT_COLOR = (255, 255, 255)
 
 ROTOR_ROTATE_TICK = 30
+
+BULLET_COLORS = ("blue", "purple", "orange")
+BULLET_SPEED = 2000
 
 class Gem(pygame.sprite.Sprite):
     
@@ -77,6 +77,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.image = self.frames[0]
         self.show_rotor = True
         self.rotor_tick = ROTOR_ROTATE_TICK
+        
+        self.rect = pygame.Rect(0, 0, self.image.get_rect().w, self.image.get_rect().h)
         
     def create_image(self, show_rotor):
         image = pygame.Surface(self.base_image.get_size()).convert()
@@ -195,9 +197,27 @@ class Aircraft10(Aircraft):
     def draw_rotor(self, image):
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())
     
+class Bullet(pygame.sprite.Sprite):
+    
+    def __init__(self, color, direction, initpos):
+        pygame.sprite.Sprite.__init__(self)
+        self.direction = direction
+        self.base_image = getattr(media, "bullet_2_" + color)
+        self.frames_hit = (getattr(media, "bullet_" + color + str(i).zfill(4)) for i in range(0, 5))
+        self.image = self.base_image
+        self.rect = pygame.Rect(initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h)
+        
+        
+    def update(self, tick):
+        move = BULLET_SPEED / tick
+        self.rect.y -= move
+        if self.rect.y < 0 or self.rect.y > 720:
+            self.kill()
+    
 class Background(pygame.sprite.Sprite):
     
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.image = media.map1
         self.tick_count = 0
         self.rect = pygame.Rect((0, 2480, 1024, 720))
@@ -209,13 +229,14 @@ class Background(pygame.sprite.Sprite):
 class EndlessCloud(pygame.sprite.Sprite):
     
     def __init__(self, delay=0):
+        pygame.sprite.Sprite.__init__(self)
         self.delay = delay
         self.reset()
         
     def reset(self):
         number = random.randint(1, 4)
         self.image = getattr(media, "cloud" + str(number))
-        self.speed = random.randint(50, 100)
+        self.speed = random.randint(50, 80)
         self.rect = pygame.Rect((random.randint(0, 1000) - 500, -self.image.get_rect().h, self.image.get_rect().w, self.image.get_rect().h))
     
     def update(self, tick):
