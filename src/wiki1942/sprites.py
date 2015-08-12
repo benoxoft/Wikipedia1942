@@ -20,6 +20,7 @@ ROTOR_ROTATE_TICK = 30
 
 BULLET_COLORS = ("blue", "purple", "orange")
 BULLET_SPEED = 2000
+BULLET_HIT_SPEED = 40
 
 class Gem(pygame.sprite.Sprite):
     
@@ -83,15 +84,21 @@ class Aircraft(pygame.sprite.Sprite):
         number = str(number).zfill(2)
         self.base_image = getattr(media, "Aircraft_" + number)
         self.rotor_image = getattr(media, "rotor" + number)
-        self.hit_image = getattr(media, "Aircraft_" + number + "_hit")
+        self.hit_image = pygame.transform.rotate(getattr(media, "Aircraft_" + number + "_hit"), 180)
         self.frames = [self.create_image(True), self.create_image(False)]
         
         self.image = self.frames[0]
         self.show_rotor = True
         self.rotor_tick = ROTOR_ROTATE_TICK
+        self.rect = pygame.Rect(random.randint(50, 950), -300, self.image.get_rect().w - 10, self.image.get_rect().h - 35)
+        self.life = 10
         
-        self.rect = pygame.Rect(5, 10, self.image.get_rect().w - 10, self.image.get_rect().h - 35)
-        
+    def hit(self):
+        self.image = self.hit_image
+        self.life -= 1
+        if self.life == 0:
+            self.kill()
+            
     def create_image(self, show_rotor):
         image = pygame.Surface(self.base_image.get_size()).convert()
         image.blit(self.base_image, (0, 0), self.base_image.get_rect())
@@ -108,6 +115,7 @@ class Aircraft(pygame.sprite.Sprite):
     
     def update(self, tick):
         self.rotor_tick -= tick
+
         if self.rotor_tick <= 0:
             self.rotor_tick = ROTOR_ROTATE_TICK
             self.show_rotor = not self.show_rotor
@@ -205,6 +213,7 @@ class Aircraft10(Aircraft):
         Aircraft.__init__(self, 10)
         self.frames[0] = pygame.transform.rotate(self.frames[0], 180)
         self.frames[1] = pygame.transform.rotate(self.frames[1], 180)
+        self.hit_image = pygame.transform.rotate(self.hit_image, 180)
         
     def draw_rotor(self, image):
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())    
@@ -215,16 +224,22 @@ class Bullet(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.direction = direction
         self.base_image = getattr(media, "bullet_2_" + color)
-        self.frames_hit = (getattr(media, "bullet_" + color + str(i).zfill(4)) for i in range(0, 5))
-        self.image = self.base_image
-        self.rect = pygame.Rect(initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h)
+        self.image = pygame.transform.rotate(self.base_image, pygame.math.Vector2(0, 1).as_polar()[1])
+        self.image = pygame.transform.rotate(self.image, self.direction.as_polar()[1])
         
+        self.rect = pygame.Rect(initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h)
+        self.hit_frame = -1
+        self.bullet_speed = BULLET_SPEED
+                
     def update(self, tick):
-        move = BULLET_SPEED / tick
-        self.rect.y -= move
+        move = self.bullet_speed / tick
+        self.rect.x += move * self.direction[0]
+        self.rect.y += move * self.direction[1]
         if self.rect.y < 0 or self.rect.y > 720:
             self.kill()
-
+        if self.rect.x < 0 or self.rect.x > 1024:
+            self.kill()
+            
 class BlueBullet(Bullet):
     
     def __init__(self, direction, initpos):
@@ -279,13 +294,23 @@ class StatusBar(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.base_image = media.status_bar
         self.image = None
-        self.rect = pygame.Rect(16, 16, self.base_image.get_rect().w, self.base_image.get_rect().h)
+        self.rect = pygame.Rect(16, 16, 1000, self.base_image.get_rect().h)
         self.current_page = ""
         self.links_left = 0
         self.total_links = 0
         self.collected = 0
+        self.current_life = 10
         self.updated = True
         self.update()
+        
+    def draw_life_bar(self):
+        font = media.get_font(8)
+        s = font.render("Life:", True, GEM_FONT_COLOR)
+        self.image.blit(s, (812, 0))
+        for i in range(0, self.current_life):
+            bar = pygame.Surface((10, 38))
+            bar.fill((200, 30, 30))
+            self.image.blit(bar, (812 + 18 * i, 10))
         
     def set_current_page(self, current_page):
         self.current_page = current_page
@@ -302,11 +327,17 @@ class StatusBar(pygame.sprite.Sprite):
     def set_collected(self, collected):
         self.collected = collected
         self.updated = True
+    
+    def set_current_life(self, life):
+        self.current_life = life
+        self.updated = True
         
     def update(self, *args):
         if not self.updated:
             return
-        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
+        self.image = pygame.Surface((self.rect.w, self.rect.h)).convert()
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.fill(colorkey)
         self.image.blit(self.base_image, (0,0))
         font = media.get_font(GEM_FONT_SIZE)
         page = font.render("Page: " + self.current_page, True, GEM_FONT_COLOR)
@@ -315,7 +346,7 @@ class StatusBar(pygame.sprite.Sprite):
         self.image.blit(links, (16, 28))
         collected = font.render("Collected: " + str(self.collected), True, GEM_FONT_COLOR)
         self.image.blit(collected, (220, 28))
-        
+        self.draw_life_bar()
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
         
@@ -333,10 +364,14 @@ class WarpPage(pygame.sprite.Sprite):
         self.next_rect = None
         self.prev_rect = None
         self.messagebox = None
+        self.warp_to_word = None
+        self.accept = False
         
     def reset(self):
         self.current_page = 1
         self.messagebox = None
+        self.warp_to_word = None
+        self.accept = False
         
     def set_found_links(self, found_links):
         self.found_links = sorted(found_links)
@@ -363,7 +398,8 @@ class WarpPage(pygame.sprite.Sprite):
                 for word, item, ir in self.items_rect:
                     if ir.collidepoint(pygame.mouse.get_pos()):
                         self.messagebox = MessageBox(word, self)
-
+                        self.warp_to_word = word
+                        
     def count_pages(self):
         c = int(math.ceil(len(self.found_links) / 16.0))
         if c == 0:
@@ -422,13 +458,10 @@ class WarpPage(pygame.sprite.Sprite):
         
         if self.messagebox:
             if self.messagebox.yes:
-                #confirm
                 self.messagebox = None
-                print "Cpnmfog"
+                self.accept = True
             elif self.messagebox.no:
-                #cancel
                 self.messagebox = None
-                print "Cancel "
             else:
                 self.messagebox.update()
                 self.image.blit(self.messagebox.image, (self.messagebox.rect.x, self.messagebox.rect.y))
@@ -493,5 +526,4 @@ class MessageBox(pygame.sprite.Sprite):
 
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
-    
     
