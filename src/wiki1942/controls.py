@@ -20,6 +20,12 @@ class GameControl:
         self.ui_group.add(self.statusbar)
         self.gems = GemFactory(self.statusbar)
         
+        self.warp = sprites.WarpPage()
+        self.warp.current_page = 1
+        self.warp.found_links = ["test", "test 2"]
+        
+        self.ui_group.add(self.warp)
+        
     def manage_collisions(self):
         for gem in pygame.sprite.groupcollide(self.gems.gems, self.player_group, True, False):
             self.player.add_gem(gem)

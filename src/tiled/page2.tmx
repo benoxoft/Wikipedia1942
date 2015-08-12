@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="40" tilewidth="16" tileheight="16" nextobjectid="1">
+ <tileset firstgid="1" name="10_basic_message_boxes_by_CharlesGabriel" tilewidth="16" tileheight="16" tilecount="2480">
+  <image source="Downloads/10_basic_message_boxes_by_CharlesGabriel.png" trans="ff00ff" width="650" height="1000"/>
+ </tileset>
+ <layer name="Calque de Tile 1" width="50" height="40">
+  <data encoding="base64" compression="zlib">
+   eJzt2McNAjEUhOG9bRXkzJKa4EYBNEEPNEEPNEFacqYkfrfAIjE8vcN3s2WPNH4H5+IoyqOAIkooo4IqaqijgSZaaCNBB1300P9g/bfOHWCI0Z8bYyJwj6ymmAncI6t5bKNXIYeFXoX3YaFXIYeFXlmZV94rLd4rLd4rLd4rLZ5Di+fQ4nNXi/dKi6X/Egs5rLxz75UWz6HFSg6fV1qs9MpzaLGUY4ElVlhjgxRb7LDHAUeccMYFV9x+uPeOB5544Q2MeqWW
+  </data>
+ </layer>
+ <layer name="Calque 2" width="50" height="40">
+  <data encoding="base64" compression="zlib">
+   eJztmWlSE0EUgPNvToGCAoIgcomwoyCgXCLBIIuySC6RoOLCql6CRXBDEDgSX1elqx5tDzN0ZiwmzKv6qujq9S39MrzOZFK5jlLnZTK34DbUQwPcgbvQCE3QDPegBVrhPrRBOzyAjhBr6P4o9noInd5FPbKeXb/rLuPGuUu08zABz6EAk/ACpmA6RP8MzMJLeAVzAXNc1puHBViE11A09NimvQO7sAffYB8O4Dv8gJ/wC37DIfyBoyvMk+Nc9zqGv3ACp3Bm6CFt42efLgvd0AO90Odo28nKHJe5/YYeZdrL8MY4lxo3UDlz3sCml5r/Ft7BCryHD/ARPsEqrME6bMAmjMKY41xTjzD5yiWXaH+55sOg9U091D2XPjHtUrb0ly1If30VfsoZfdXe7yXv3zuuJOvZ413H1SA8gscwBMPwBEZEXDw1dBoX5y4ZfX72CoqjLfgMXyp2MkXbKwo7aSmKc+ciPL/fb0eYuHLZR9qrZNmzWokzrp752CsXgx42f8QVV1qS7A8ZV0n2h9wnyf6Q+8Thj/+Vd+POV7a4SmK+ssVVEvOVLa7SfJXmq2ol9cfN9Ef6vRtO0u/d1B+pP/ylVvxh00PVd6Oot8q67ZmwxbbnX+t13c+s7SZVChY9emtEN1V/tdVdo3orqrvCeGVnNT6oFmy+RSmJ4z1Kfpdclg+1FIUeYc5j+z8q6B3H5V7KeyjXv+zeqtxYqOQFvf6+8bdu18o9l3IOlybe3A==
+  </data>
+ </layer>
+</map>

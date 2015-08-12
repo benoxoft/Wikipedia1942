@@ -303,10 +303,101 @@ class StatusBar(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
         self.image.blit(self.base_image, (0,0))
         font = media.get_font(GEM_FONT_SIZE)
-        page = font.render(self.current_page, True, GEM_FONT_COLOR)
+        page = font.render("Page: " + self.current_page, True, GEM_FONT_COLOR)
         self.image.blit(page, (16,16))
         links = font.render("Links left: " + str(self.links_left) + " / " + str(self.total_links), True, GEM_FONT_COLOR)
         self.image.blit(links, (16, 32))
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
         
+class WarpPage(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.page2
+        self.image = self.base_image
+        self.rect = pygame.Rect(((1024 - self.base_image.get_rect().w) / 2, (720 - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.current_page = 0
+        self.found_links = None
+        self.on_item_clicked = []
+        self.items_rect = []
+        self.next_rect = None
+        self.prev_rect = None
+        
+    def set_found_links(self, found_links):
+        self.found_links = found_links
+    
+    def next_page(self):
+        pass
+    
+    def previous_page(self):
+        pass
+    
+    def click(self):
+        if self.next_rect.collidepoint(pygame.mouse.get_pos()):
+            self.next_page()
+        elif self.prev_rect.collidepoint(pygame.mouse.get_pos()):
+            self.previous_page()
+        else:
+            for word, item, ir in self.items_rect:
+                if ir.collidepoint(pygame.mouse.get_pos()):
+                    print "clicked ", ir
+
+    def count_pages(self):
+        return 0
+    
+    def create_next_button(self):
+        buttons_font = media.get_font(16)
+        snext = buttons_font.render("Next", True, GEM_FONT_COLOR)
+        self.next_rect = pygame.Rect((self.rect.x + 660, self.rect.y + 594, snext.get_rect().w, snext.get_rect().h))
+        return (snext, (660, 594))
+        
+    def create_previous_button(self):
+        buttons_font = media.get_font(16)
+        sprevious = buttons_font.render("Previous", True, GEM_FONT_COLOR)
+        self.prev_rect = pygame.Rect((self.rect.x + 430, self.rect.y + 594, sprevious.get_rect().w, sprevious.get_rect().h))
+        return (sprevious, (430, 594))
+    
+    def create_pages(self):
+        pages_font = media.get_font(20)
+        pages = pages_font.render("Page: " + str(self.current_page) + " / " + str(self.count_pages()), True, GEM_FONT_COLOR)
+        return (pages, (48, 592))
+    
+    def create_title(self):
+        title_font = media.get_font(32)
+        title = title_font.render("Warp zone", True, GEM_FONT_COLOR)
+        return (title, ((self.base_image.get_rect().w - title.get_rect().w) / 2, 48))
+    
+    def render_page1(self):
+        item_font = media.get_font(10)
+        for i in range(0, 16):
+            y = 140 + 24 * i
+            item_rect = pygame.Rect((self.rect.x + 48, self.rect.y + y, 320, 24))
+            item = item_font.render("test", True, GEM_FONT_COLOR)
+            
+            if item_rect.collidepoint(pygame.mouse.get_pos()):
+                selitem = pygame.Surface((item_rect.w, item_rect.h))
+                selitem.fill((50, 155, 50))
+                selitem.blit(item, (8, 8))
+                self.image.blit(selitem, (48, y))
+            else:
+                self.image.blit(item, (56, y + 8))
+            self.items_rect.append(("test", item, item_rect))
+                        
+    def render_page2(self):
+        item_font = media.get_font(10)
+        for i in range(0, 16):
+            item = item_font.render("test", True, GEM_FONT_COLOR)
+            self.image.blit(item , (432, 148 + 24 * i))
+            
+    def update(self, *args):
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
+        self.image.blit(self.base_image, (0, 0))
+        self.image.blit(*self.create_title())
+        self.image.blit(*self.create_pages())
+        self.image.blit(*self.create_next_button())
+        self.image.blit(*self.create_previous_button())
+        self.render_page1()
+        self.render_page2()
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
