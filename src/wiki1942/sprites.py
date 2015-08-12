@@ -1,6 +1,7 @@
 import pygame
 import media
 import random
+import math
 
 #http://opengameart.org/content/rotating-crystal-animation-8-step
 #http://opengameart.org/content/aircrafts
@@ -13,7 +14,7 @@ GEM_ROTATE_TICK = 150
 GEM_FONT_SIZE = 8
 TOOLTIP_WIDTH = 400
 GEM_COLORS = ("blue", "green", "grey", "orange", "pink", "yellow")
-GEM_FONT_COLOR = (255, 255, 255)
+GEM_FONT_COLOR = (255, 255, 160)
 
 ROTOR_ROTATE_TICK = 30
 
@@ -282,6 +283,7 @@ class StatusBar(pygame.sprite.Sprite):
         self.current_page = ""
         self.links_left = 0
         self.total_links = 0
+        self.collected = 0
         self.updated = True
         self.update()
         
@@ -297,6 +299,10 @@ class StatusBar(pygame.sprite.Sprite):
         self.total_links = total_links
         self.updated = True
     
+    def set_collected(self, collected):
+        self.collected = collected
+        self.updated = True
+        
     def update(self, *args):
         if not self.updated:
             return
@@ -304,9 +310,12 @@ class StatusBar(pygame.sprite.Sprite):
         self.image.blit(self.base_image, (0,0))
         font = media.get_font(GEM_FONT_SIZE)
         page = font.render("Page: " + self.current_page, True, GEM_FONT_COLOR)
-        self.image.blit(page, (16,16))
-        links = font.render("Links left: " + str(self.links_left) + " / " + str(self.total_links), True, GEM_FONT_COLOR)
-        self.image.blit(links, (16, 32))
+        self.image.blit(page, (16,14))
+        links = font.render("Gems left: " + str(self.links_left) + " / " + str(self.total_links), True, GEM_FONT_COLOR)
+        self.image.blit(links, (16, 28))
+        collected = font.render("Collected: " + str(self.collected), True, GEM_FONT_COLOR)
+        self.image.blit(collected, (220, 28))
+        
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
         
@@ -314,25 +323,32 @@ class WarpPage(pygame.sprite.Sprite):
     
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.base_image = media.page2
+        self.base_image = media.page3
         self.image = self.base_image
-        self.rect = pygame.Rect(((1024 - self.base_image.get_rect().w) / 2, (720 - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
-        self.current_page = 0
+        self.rect = pygame.Rect(((1024 - self.base_image.get_rect().w) / 2, (780 - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.current_page = 1
         self.found_links = None
         self.on_item_clicked = []
         self.items_rect = []
         self.next_rect = None
         self.prev_rect = None
-        
+    
+    def reset(self):
+        self.current_page = 1
+
     def set_found_links(self, found_links):
-        self.found_links = found_links
+        self.found_links = sorted(found_links)
     
     def next_page(self):
-        pass
-    
+        if self.current_page < self.count_pages():
+            self.current_page += 1
+            self.update()
+            
     def previous_page(self):
-        pass
-    
+        if self.current_page > 1:
+            self.current_page -= 1
+            self.update()
+            
     def click(self):
         if self.next_rect.collidepoint(pygame.mouse.get_pos()):
             self.next_page()
@@ -344,7 +360,11 @@ class WarpPage(pygame.sprite.Sprite):
                     print "clicked ", ir
 
     def count_pages(self):
-        return 0
+        c = int(math.ceil(len(self.found_links) / 16.0))
+        if c == 0:
+            return 1
+        else:
+            return c
     
     def create_next_button(self):
         buttons_font = media.get_font(16)
@@ -368,12 +388,14 @@ class WarpPage(pygame.sprite.Sprite):
         title = title_font.render("Warp zone", True, GEM_FONT_COLOR)
         return (title, ((self.base_image.get_rect().w - title.get_rect().w) / 2, 48))
     
-    def render_page1(self):
-        item_font = media.get_font(10)
-        for i in range(0, 16):
+    def render_page(self):
+        item_font = media.get_font(8)
+        page_items = self.found_links[16 * (self.current_page - 1) : 16 * self.current_page]
+            
+        for i in range(0, len(page_items)):
             y = 140 + 24 * i
-            item_rect = pygame.Rect((self.rect.x + 48, self.rect.y + y, 320, 24))
-            item = item_font.render("test", True, GEM_FONT_COLOR)
+            item_rect = pygame.Rect((self.rect.x + 48, self.rect.y + y, 700, 24))
+            item = item_font.render(page_items[i], True, GEM_FONT_COLOR)
             
             if item_rect.collidepoint(pygame.mouse.get_pos()):
                 selitem = pygame.Surface((item_rect.w, item_rect.h))
@@ -382,14 +404,8 @@ class WarpPage(pygame.sprite.Sprite):
                 self.image.blit(selitem, (48, y))
             else:
                 self.image.blit(item, (56, y + 8))
-            self.items_rect.append(("test", item, item_rect))
-                        
-    def render_page2(self):
-        item_font = media.get_font(10)
-        for i in range(0, 16):
-            item = item_font.render("test", True, GEM_FONT_COLOR)
-            self.image.blit(item , (432, 148 + 24 * i))
-            
+            self.items_rect.append((page_items[i], item, item_rect))
+                                    
     def update(self, *args):
         self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
         self.image.blit(self.base_image, (0, 0))
@@ -397,7 +413,6 @@ class WarpPage(pygame.sprite.Sprite):
         self.image.blit(*self.create_pages())
         self.image.blit(*self.create_next_button())
         self.image.blit(*self.create_previous_button())
-        self.render_page1()
-        self.render_page2()
+        self.render_page()
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)

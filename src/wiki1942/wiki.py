@@ -27,6 +27,8 @@ def gemify_page(wiki_page):
 def open_page(page_title):
     try:
         page = wikipedia.page(page_title)
+    except wikipedia.PageError:
+        return randomize_page()
     except Exception as e:
         alternative =  random.randint(0, len(e.options)-1)
         page = wikipedia.page(e.options[alternative])
