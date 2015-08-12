@@ -332,10 +332,12 @@ class WarpPage(pygame.sprite.Sprite):
         self.items_rect = []
         self.next_rect = None
         self.prev_rect = None
-    
+        self.messagebox = None
+        
     def reset(self):
         self.current_page = 1
-
+        self.messagebox = None
+        
     def set_found_links(self, found_links):
         self.found_links = sorted(found_links)
     
@@ -350,14 +352,17 @@ class WarpPage(pygame.sprite.Sprite):
             self.update()
             
     def click(self):
-        if self.next_rect.collidepoint(pygame.mouse.get_pos()):
-            self.next_page()
-        elif self.prev_rect.collidepoint(pygame.mouse.get_pos()):
-            self.previous_page()
+        if self.messagebox:
+            self.messagebox.click()
         else:
-            for word, item, ir in self.items_rect:
-                if ir.collidepoint(pygame.mouse.get_pos()):
-                    print "clicked ", ir
+            if self.next_rect.collidepoint(pygame.mouse.get_pos()):
+                self.next_page()
+            elif self.prev_rect.collidepoint(pygame.mouse.get_pos()):
+                self.previous_page()
+            else:
+                for word, item, ir in self.items_rect:
+                    if ir.collidepoint(pygame.mouse.get_pos()):
+                        self.messagebox = MessageBox(word, self)
 
     def count_pages(self):
         c = int(math.ceil(len(self.found_links) / 16.0))
@@ -397,7 +402,7 @@ class WarpPage(pygame.sprite.Sprite):
             item_rect = pygame.Rect((self.rect.x + 48, self.rect.y + y, 700, 24))
             item = item_font.render(page_items[i], True, GEM_FONT_COLOR)
             
-            if item_rect.collidepoint(pygame.mouse.get_pos()):
+            if not self.messagebox and item_rect.collidepoint(pygame.mouse.get_pos()):
                 selitem = pygame.Surface((item_rect.w, item_rect.h))
                 selitem.fill((50, 155, 50))
                 selitem.blit(item, (8, 8))
@@ -407,12 +412,86 @@ class WarpPage(pygame.sprite.Sprite):
             self.items_rect.append((page_items[i], item, item_rect))
                                     
     def update(self, *args):
-        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h)).convert()
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h))
         self.image.blit(self.base_image, (0, 0))
         self.image.blit(*self.create_title())
         self.image.blit(*self.create_pages())
         self.image.blit(*self.create_next_button())
         self.image.blit(*self.create_previous_button())
         self.render_page()
+        
+        if self.messagebox:
+            if self.messagebox.yes:
+                #confirm
+                self.messagebox = None
+                print "Cpnmfog"
+            elif self.messagebox.no:
+                #cancel
+                self.messagebox = None
+                print "Cancel "
+            else:
+                self.messagebox.update()
+                self.image.blit(self.messagebox.image, (self.messagebox.rect.x, self.messagebox.rect.y))
+            
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+
+class MessageBox(pygame.sprite.Sprite):
+    
+    def __init__(self, word, owner):
+        pygame.sprite.Sprite.__init__(self)
+        self.word = word
+        self.owner = owner
+        self.base_image = media.messagebox
+        self.image = self.base_image
+        self.rect = pygame.Rect(((self.owner.rect.w - self.base_image.get_rect().w) / 2, (self.owner.rect.h - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.on_item_clicked = []
+        self.ok_rect = None
+        self.cancel_rect = None
+        self.yes = False
+        self.no = False
+        
+    def create_title(self):
+        title_font = media.get_font(32)
+        title = title_font.render("Warp to?", True, GEM_FONT_COLOR)
+        return (title, (32, 48))
+    
+    def create_message(self):
+        msg_font = media.get_font(8)
+        msg = msg_font.render(self.word, True, GEM_FONT_COLOR)
+        return (msg, (32, 148))
+    
+    def create_yes(self):
+        buttons_font = media.get_font(16)
+        ok = buttons_font.render("Yes", True, GEM_FONT_COLOR)
+        self.ok_rect = pygame.Rect((self.owner.rect.x + self.rect.x + 328, self.owner.rect.y + self.rect.y + 256, ok.get_rect().w, ok.get_rect().h))
+        return (ok, (328, 256))
+    
+    def create_no(self):
+        buttons_font = media.get_font(16)
+        cancel = buttons_font.render("No", True, GEM_FONT_COLOR)
+        self.cancel_rect = pygame.Rect((self.owner.rect.x + self.rect.x + 116, self.owner.rect.y + self.rect.y + 256, cancel.get_rect().w, cancel.get_rect().h))
+        return (cancel, (116, 256))
+    
+    def click(self):
+        print self.owner.rect.x, self.rect.x
+        print self.cancel_rect
+        print self.ok_rect
+        print pygame.mouse.get_pos()
+        if self.ok_rect.collidepoint(pygame.mouse.get_pos()):
+            self.yes = True
+        elif self.cancel_rect.collidepoint(pygame.mouse.get_pos()):
+            self.no = True
+    
+    def update(self, *args):
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.image.blit(self.base_image, (0, 0))
+        self.image.blit(*self.create_title())
+        self.image.blit(*self.create_message())
+        self.image.blit(*self.create_yes())
+        self.image.blit(*self.create_no())
+
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+    
+    

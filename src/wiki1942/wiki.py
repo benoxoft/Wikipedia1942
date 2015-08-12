@@ -10,6 +10,7 @@ def next_gem(current_time, gems):
         return None
 
 def randomize_page():
+    return open_page("Anime")
     return open_page(wikipedia.random())
 
 def gemify_page(wiki_page):

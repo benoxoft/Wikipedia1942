@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="16" tileheight="16" nextobjectid="1">
+ <tileset firstgid="1" name="10_basic_message_boxes_by_CharlesGabriel" tilewidth="16" tileheight="16" tilecount="2480">
+  <image source="../../../../Downloads/10_basic_message_boxes_by_CharlesGabriel.png" trans="6c6c6c" width="650" height="1000"/>
+ </tileset>
+ <layer name="Calque de Tile 1" width="30" height="20">
+  <data encoding="base64" compression="zlib">
+   eJzN1VdSAkEQxnHeOAWKOaJcAsxZhEugqJjDegkj5gBcQsGIWY/kf6vGqinLcnuoBXz4vfXMt91dW+PzejxVqIYfNahFHerRgEY0GdQ1owWtaEM7AuhAJ4IIIYwudKMHvehDPwYwiCGDumGMYBRjGEcEE4gi9g9yJXe6nTspzHY7d0vLLmdupfZr9zqFBKYxg1kkMYd5LJRoztvYwS72kMI+DnCII4PvW8QSlrGCVaxhHVYRudK6Y5zgFGc4xwXSyBSR63RfqebslButUK5lmBt2Mdv0Pypn7oY2Z5/X+Z3zK0Et87dzf71/P/cbEvSaUr3GtNy46jUpmEVWy42r3EtcIYc8rnGDW9zhXvOp3ft9zq59xBOe8YJXvOEdH+qcpea86eJupXVZYZ8PKAj6kdbZfX8BmBoZWA==
+  </data>
+ </layer>
+</map>
