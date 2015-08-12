@@ -8,6 +8,7 @@ import math
 #http://opengameart.org/content/orthographic-outdoor-tiles
 #http://opengameart.org/content/fluffy-clouds
 #http://opengameart.org/content/10-basic-message-boxes
+#http://opengameart.org/content/explosion-animated
 
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
@@ -20,7 +21,6 @@ ROTOR_ROTATE_TICK = 30
 
 BULLET_COLORS = ("blue", "purple", "orange")
 BULLET_SPEED = 2000
-BULLET_HIT_SPEED = 40
 
 class Gem(pygame.sprite.Sprite):
     
@@ -76,7 +76,37 @@ class GemTooltip(pygame.sprite.Sprite):
         self.rect.y += self.speed / tick
         if not self.gem.alive():
             self.kill()
+        
+class Explosion(pygame.sprite.Sprite):
+    
+    def __init__(self, initpos):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.explosionframes
+        self.frames = [self.create_frame(i) for i in range(0, 16)]# if i % 2 == 1]
+        self.index = 0
+        self.image = self.frames[0]
+        self.rect = pygame.Rect((initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h))
+        
+    def create_frame(self, position):
+        image = pygame.Surface((128, 128))
+        if position < 8:
+            rect = pygame.Rect(position * 128, 0, 128, 128)
+        else:
+            rect = pygame.Rect((position - 8) * 128, 128, 128, 128)
             
+        image.blit(self.base_image, (0, 0), rect)
+        colorkey = self.base_image.get_at((0,0))        
+        image.set_colorkey(colorkey, pygame.RLEACCEL)
+            
+        return image
+    
+    def update(self, tick):
+        self.index += 1
+        if self.index == len(self.frames):
+            self.kill()
+            return 
+        self.image = self.frames[self.index]
+    
 class Aircraft(pygame.sprite.Sprite):
     
     def __init__(self, number):
@@ -90,8 +120,48 @@ class Aircraft(pygame.sprite.Sprite):
         self.image = self.frames[0]
         self.show_rotor = True
         self.rotor_tick = ROTOR_ROTATE_TICK
-        self.rect = pygame.Rect(random.randint(50, 950), -300, self.image.get_rect().w - 10, self.image.get_rect().h - 35)
-        self.life = 10
+        self.drawing_rect = pygame.Rect(random.randint(50, 950), -300, self.image.get_rect().w, self.image.get_rect().h)
+
+        self.collide_rect_diff_x = 5
+        self.collide_rect_diff_y = 20
+        self.collide_rect = pygame.Rect(self.drawing_rect.x + self.collide_rect_diff_x,
+                                        self.drawing_rect.y + self.collide_rect_diff_y,
+                                        self.drawing_rect.w - 10, self.drawing_rect.h - 44)
+        
+        self.rect = self.drawing_rect
+        
+        #r = pygame.Surface((self.collide_rect.w, self.collide_rect.h))
+        #r.fill(GEM_FONT_COLOR)
+        #self.frames[0].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
+        #self.frames[1].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
+                
+        self.life = 5
+        
+    def set_drawing(self):
+        self.rect = self.drawing_rect
+        
+    def set_collide(self):
+        self.rect = self.collide_rect
+        
+    def move(self, mx, my):
+        self.move_x(mx)
+        self.move_y(my)
+        
+    def move_x(self, mx):
+        self.drawing_rect.x += mx
+        self.collide_rect.x += mx
+        
+    def move_y(self, my):
+        self.drawing_rect.y += my
+        self.collide_rect.y += my
+        
+    def set_drawing_position_x(self, x):
+        self.drawing_rect.x = x
+        self.collide_rect.x = x + self.collide_rect_diff_x
+        
+    def set_drawing_position_y(self, y):
+        self.drawing_rect.y = y
+        self.collide_rect.y = y + self.collide_rect_diff_y
         
     def hit(self):
         self.image = self.hit_image
@@ -214,7 +284,14 @@ class Aircraft10(Aircraft):
         self.frames[0] = pygame.transform.rotate(self.frames[0], 180)
         self.frames[1] = pygame.transform.rotate(self.frames[1], 180)
         self.hit_image = pygame.transform.rotate(self.hit_image, 180)
-        
+        self.life = 10
+
+        self.collide_rect_diff_x = 5
+        self.collide_rect_diff_y = 20
+        self.collide_rect = pygame.Rect(self.drawing_rect.x + self.collide_rect_diff_x,
+                                        self.drawing_rect.y + self.collide_rect_diff_y,
+                                        self.drawing_rect.w - 10, self.drawing_rect.h - 44)
+
     def draw_rotor(self, image):
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2, 0), self.rotor_image.get_rect())    
 
@@ -223,7 +300,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, color, direction, initpos):
         pygame.sprite.Sprite.__init__(self)
         self.direction = direction
-        self.base_image = getattr(media, "bullet_2_" + color)
+        self.base_image = pygame.transform.scale2x(getattr(media, "bullet_2_" + color))
         self.image = pygame.transform.rotate(self.base_image, pygame.math.Vector2(0, 1).as_polar()[1])
         self.image = pygame.transform.rotate(self.image, self.direction.as_polar()[1])
         
@@ -254,6 +331,31 @@ class OrangeBullet(Bullet):
     
     def __init__(self, direction, initpos):
         Bullet.__init__(self, "orange", direction, initpos)
+        
+class Debris(pygame.sprite.Sprite):
+    
+    def __init__(self, direction, initpos):
+        pygame.sprite.Sprite.__init__(self)
+        self.frames = [media.bullet_orange0003, media.bullet_blue0003, media.bullet_purple0003]
+        self.frames = [pygame.transform.scale2x(frame) for frame in self.frames]
+        self.image = self.frames[0]
+        self.rect = pygame.Rect((initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h))
+        self.index = 0
+        self.speed = 500
+        self.direction = direction
+        
+    def update(self, tick):
+        self.index += 1
+        if self.index == len(self.frames):
+            self.index = 0
+        self.image = self.frames[self.index]
+        self.rect.x += self.speed / tick * self.direction.x
+        self.rect.y += self.speed / tick * self.direction.y
+        
+        if self.rect.x < 0 or self.rect.x > 1024:
+            self.kill()
+        if self.rect.y < 0 or self.rect.y > 720:
+            self.kill()
         
 class Background(pygame.sprite.Sprite):
     
