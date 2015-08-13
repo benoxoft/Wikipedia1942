@@ -14,7 +14,7 @@ GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
 GEM_FONT_SIZE = 8
 TOOLTIP_WIDTH = 400
-GEM_COLORS = ("blue", "green", "grey", "orange", "pink", "yellow")
+GEM_COLORS = ("blue", "green", "orange", "grey", "yellow")
 GEM_FONT_COLOR = (255, 255, 160)
 
 ROTOR_ROTATE_TICK = 30
@@ -26,9 +26,9 @@ class Gem(pygame.sprite.Sprite):
     
     def __init__(self, name, size=32):
         pygame.sprite.Sprite.__init__(self)
-        color = random.randint(0, len(GEM_COLORS) -1)
+        self.color = random.randint(0, len(GEM_COLORS) -1)
         self.name = name
-        self.base_image = getattr(media, "gem" + str(size) + GEM_COLORS[color])
+        self.base_image = getattr(media, "gem" + str(size) + GEM_COLORS[self.color])
         self.next_rotate = GEM_ROTATE_TICK
         self.image_cursor = 1
         self.size = size
@@ -36,7 +36,7 @@ class Gem(pygame.sprite.Sprite):
         self.image = self.frames[0]
         self.speed = random.randint(100, 200)
         self.rect = pygame.Rect((random.randint(120, 660), -60, 32, 32))
-            
+        
     def create_frames(self):
         return [self.create_gem_frame(i) for i in range(0, GEM_FRAMES)]
         
@@ -303,7 +303,7 @@ class Bullet(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.direction = direction
         self.base_image = pygame.transform.scale2x(getattr(media, "bullet_2_" + color))
-        self.image = pygame.transform.rotate(self.base_image, pygame.math.Vector2(0, 1).as_polar()[1])
+        self.image = pygame.transform.rotate(self.base_image, pygame.math.Vector2(0, -1).as_polar()[1])
         self.image = pygame.transform.rotate(self.image, self.direction.as_polar()[1])
         
         self.rect = pygame.Rect(initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h)
@@ -313,7 +313,7 @@ class Bullet(pygame.sprite.Sprite):
     def update(self, tick):
         move = self.bullet_speed / tick
         self.rect.x += move * self.direction[0]
-        self.rect.y += move * self.direction[1]
+        self.rect.y -= move * self.direction[1]
         if self.rect.y < 0 or self.rect.y > 720:
             self.kill()
         if self.rect.x < 0 or self.rect.x > 1024:
@@ -631,3 +631,142 @@ class MessageBox(pygame.sprite.Sprite):
         colorkey = self.base_image.get_at((0,0))        
         self.image.set_colorkey(colorkey, pygame.RLEACCEL)
     
+class PowerupBar(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.powerup_bar
+        self.image = self.base_image
+        self.rect = pygame.Rect((16, 640, 1000, self.base_image.get_rect().h))
+        
+        self.gem_green16 = pygame.Surface((16, 16))
+        self.gem_green16.blit(media.gem16green, pygame.Rect(0, 0, 16, 16))
+        colorkey = self.gem_green16.get_at((0,0))        
+        self.gem_green16.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.gem_green32 = pygame.Surface((32, 32))
+        self.gem_green32.blit(media.gem32green, pygame.Rect(0, 0, 32, 32))
+        colorkey = self.gem_green32.get_at((0,0))        
+        self.gem_green32.set_colorkey(colorkey, pygame.RLEACCEL)
+
+        self.gem_blue16 = pygame.Surface((16, 16))
+        self.gem_blue16.blit(media.gem16blue, pygame.Rect(0, 0, 16, 16))
+        colorkey = self.gem_blue16.get_at((0,0))        
+        self.gem_blue16.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.gem_blue32 = pygame.Surface((32, 32))
+        self.gem_blue32.blit(media.gem32blue, pygame.Rect(0, 0, 32, 32))
+        colorkey = self.gem_blue32.get_at((0,0))        
+        self.gem_blue32.set_colorkey(colorkey, pygame.RLEACCEL)
+
+        self.gem_yellow16 = pygame.Surface((16, 16))
+        self.gem_yellow16.blit(media.gem16yellow, pygame.Rect(0, 0, 16, 16))
+        colorkey = self.gem_yellow16.get_at((0,0))        
+        self.gem_yellow16.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.gem_yellow32 = pygame.Surface((32, 32))
+        self.gem_yellow32.blit(media.gem32yellow, pygame.Rect(0, 0, 32, 32))
+        colorkey = self.gem_yellow32.get_at((0,0))        
+        self.gem_yellow32.set_colorkey(colorkey, pygame.RLEACCEL)
+        
+        self.gem_orange16 = pygame.Surface((16, 16))
+        self.gem_orange16.blit(media.gem16orange, pygame.Rect(0, 0, 16, 16))
+        colorkey = self.gem_orange16.get_at((0,0))        
+        self.gem_orange16.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.gem_orange32 = pygame.Surface((32, 32))
+        self.gem_orange32.blit(media.gem32orange, pygame.Rect(0, 0, 32, 32))
+        colorkey = self.gem_orange32.get_at((0,0))        
+        self.gem_orange32.set_colorkey(colorkey, pygame.RLEACCEL)
+        
+        self.gem_grey16 = pygame.Surface((16, 16))
+        self.gem_grey16.blit(media.gem16grey, pygame.Rect(0, 0, 16, 16))
+        colorkey = self.gem_grey16.get_at((0,0))        
+        self.gem_grey16.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.gem_grey32 = pygame.Surface((32, 32))
+        self.gem_grey32.blit(media.gem32grey, pygame.Rect(0, 0, 32, 32))
+        colorkey = self.gem_grey32.get_at((0,0))        
+        self.gem_grey32.set_colorkey(colorkey, pygame.RLEACCEL)
+                
+        self.green_active = 0
+        self.blue_active = 0
+        self.yellow_active = 0
+        self.grey_active = 0
+        self.color = ""
+        
+    def create_image(self):
+        self.image = pygame.Surface((self.rect.w, self.rect.h))
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.image.fill(colorkey)
+        self.image.blit(self.base_image, (0, 0))
+        self.image.blit(self.gem_green16, (self.base_image.get_rect().w, 0))
+        self.image.blit(self.gem_blue16, (self.base_image.get_rect().w, 16))
+        self.image.blit(self.gem_yellow16, (self.base_image.get_rect().w, 32))
+        self.image.blit(self.gem_grey16, (self.base_image.get_rect().w, 48))
+        self.draw_powerup_gem()
+        self.draw_progress_bars()
+        
+    def set_color(self, color):
+        self.color = GEM_COLORS[color]
+
+    def draw_powerup_gem(self):
+        if self.color == "green":
+            image = self.gem_green32
+        elif self.color == "blue":
+            image = self.gem_blue32
+        elif self.color == "yellow":
+            image = self.gem_yellow32
+        elif self.color == "grey":
+            image = self.gem_grey32
+        elif self.color == "orange":
+            image = self.gem_orange32
+        else:
+            return
+        
+        colorkey = image.get_at((0,0))        
+        image.set_colorkey(colorkey, pygame.RLEACCEL)
+        self.image.blit(image, (16, 16))
+    
+    def activate_powerup(self):
+        media.powerup.play()
+        if self.color == "green":
+            self.green_active = 300000
+        elif self.color == "blue":
+            self.blue_active = 60000
+        elif self.color == "yellow":
+            self.yellow_active = 60000
+        elif self.color == "grey":
+            self.grey_active = 60000
+        self.color = ""
+        
+    def draw_progress_bars(self):
+        if self.green_active > 0:
+            bar = pygame.Surface((self.green_active / 300, 8))
+            bar.fill((0, 200, 0))
+            self.image.blit(bar, (self.base_image.get_rect().w + 32, 0))
+        if self.blue_active > 0:
+            bar = pygame.Surface((self.blue_active / 60, 8))
+            bar.fill((0, 0, 200))
+            self.image.blit(bar, (self.base_image.get_rect().w + 32, 16))
+        if self.yellow_active > 0:
+            bar = pygame.Surface((self.yellow_active / 60, 8))
+            bar.fill((200, 200, 0))
+            self.image.blit(bar, (self.base_image.get_rect().w + 32, 32))
+        if self.grey_active > 0:
+            bar = pygame.Surface((self.grey_active / 60, 8))
+            bar.fill((180, 180, 180))
+            self.image.blit(bar, (self.base_image.get_rect().w + 32, 48))
+            
+    def update(self, tick):
+        self.green_active -= tick
+        if self.green_active < 0:
+            self.green_active = 0
+        self.blue_active -= tick
+        if self.blue_active < 0:
+            self.blue_active = 0
+        self.yellow_active -= tick
+        if self.yellow_active < 0:
+            self.yellow_active = 0
+        self.grey_active -= tick
+        if self.grey_active < 0:
+            self.grey_active = 0
+            
+        self.create_image()
+        

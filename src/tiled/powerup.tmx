@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="4" height="4" tilewidth="16" tileheight="16" nextobjectid="1">
+ <tileset firstgid="1" name="10_basic_message_boxes_by_CharlesGabriel" tilewidth="16" tileheight="16" tilecount="2480">
+  <image source="../../../../Downloads/10_basic_message_boxes_by_CharlesGabriel.png" trans="6c6c6c" width="650" height="1000"/>
+ </tileset>
+ <layer name="Calque de Tile 1" width="4" height="4">
+  <data encoding="base64" compression="zlib">
+   eJyTZWdgkANieSA2AGJXIC4D4kIgbgDiXCgbhFcA8V4g3gfE+4H4AhADAMIEB6g=
+  </data>
+ </layer>
+</map>

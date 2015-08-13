@@ -16,13 +16,16 @@ class GameControl:
         self.explosions = pygame.sprite.Group()
         
         self.statusbar = sprites.StatusBar()
-        self.player = Player(self.statusbar)
+        self.powerupbar = sprites.PowerupBar()
+        
+        self.player = Player(self.statusbar, self.powerupbar)
         self.player_group = pygame.sprite.Group()
         self.player_group.add(self.player)
         self.enemy = EnemyFactory(self.explosions)
         self.ui_group = pygame.sprite.Group()
         self.ui_group.add(self.statusbar)
-        self.gems = GemFactory(self.statusbar)
+        self.ui_group.add(self.powerupbar)
+        self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
         
         self.warp = sprites.WarpPage()
         self.warp.current_page = 1
@@ -35,7 +38,7 @@ class GameControl:
         
     def manage_collisions(self):
         for gem in pygame.sprite.groupcollide(self.gems.gems, self.player_group, True, False):
-            self.player.add_gem(gem.name)
+            self.player.add_gem(gem)
             media.gem.play()
             
         for plane in self.enemy.planes:
@@ -49,6 +52,9 @@ class GameControl:
         
         self.player.main_plane.set_collide()
         for player in pygame.sprite.groupcollide(self.player_group, self.enemy.bullets, False, True):
+            if self.powerupbar.green_active:
+                self.powerupbar.green_active -= 60000
+                continue
             self.player.main_plane.hit()
             self.statusbar.set_current_life(self.player.main_plane.life)
         self.player.main_plane.set_drawing()
@@ -78,7 +84,7 @@ class GameControl:
         self.gems.tooltips.draw(self.screen)
         self.explosions.draw(self.screen)
         self.ui_group.draw(self.screen)
-
+                
         if self.player.show_warp_zone:
             self.warp.set_found_links(self.player.gems)
             self.warp.update(tick)
@@ -93,15 +99,33 @@ class GameControl:
     
 class GemFactory(pygame.sprite.Group):
     
-    def __init__(self, statusbar):
+    def __init__(self, statusbar, powerupbar, main_plane):
         self.gems = pygame.sprite.Group()
         self.tooltips = pygame.sprite.Group()
         self.current_page = wiki.randomize_page()
         self.links = wiki.gemify_page(self.current_page)
         self.tick_count = 0
         self.statusbar = statusbar
+        self.powerupbar = powerupbar
+        self.main_plane = main_plane
         self.update_status_bar()
         
+    def gravity_pull(self, tick):
+        if self.powerupbar.grey_active > 0:
+            rect = pygame.Rect((self.main_plane.rect.centerx - 180, self.main_plane.rect.centery - 180, 360, 360))
+            
+            for tooltip in self.tooltips:
+                gem = tooltip.gem
+                if rect.colliderect(gem.rect):
+                    x = rect.centerx - gem.rect.centerx
+                    y = rect.centery - gem.rect.centery
+                    v = pygame.math.Vector2(x, y).normalize()
+                    speed = 1000 / tick
+                    gem.rect.x += v.x * speed
+                    gem.rect.y += v.y * speed
+                    tooltip.rect.x += v.x * speed
+                    tooltip.rect.y += v.y * speed
+                    
     def update(self, tick):
         self.tick_count += tick
         gem = wiki.next_gem(self.tick_count, self.links)
@@ -113,6 +137,7 @@ class GemFactory(pygame.sprite.Group):
             self.statusbar.set_links_left(len(self.links))
         self.gems.update(tick)
         self.tooltips.update(tick)
+        self.gravity_pull(tick)
         
     def update_status_bar(self):
         self.statusbar.set_current_page(self.current_page.title)
@@ -141,7 +166,7 @@ class AircraftAI(pygame.sprite.Sprite):
         self.y_speed = 100
         self.init = True
         self.bulletv = pygame.math.Vector2()
-        self.bulletv.y = 1
+        self.bulletv.y = -1
         
     def shoot_grenade(self):
         pass
@@ -207,6 +232,7 @@ class EnemyFactory():
         self.tick_count -= tick
         if self.tick_count <= 0:
             self.tick_count = random.randint(10, 3000)
+            return
             plane = sprites.Aircraft03()
             ai = AircraftAI(plane, self.bullets, self.explosions)
             self.ais.add(ai)
@@ -214,11 +240,12 @@ class EnemyFactory():
             
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self, statusbar):
+    def __init__(self, statusbar, powerupbar):
         pygame.sprite.Sprite.__init__(self)
         
         self.quit = False
         self.left_click = False
+        self.space = False
         self.show_warp_zone = False
         self.tick_count = 0
         self.main_plane = sprites.Aircraft10()
@@ -227,41 +254,64 @@ class Player(pygame.sprite.Sprite):
         self.bullets = pygame.sprite.Group()
         self.rect = self.main_plane.rect
         self.gems = []
+        self.powerup_counter = 0
         self.statusbar = statusbar
+        self.powerupbar = powerupbar
         self.bulletv = pygame.math.Vector2()
-        self.bulletv[1] = -1
-        
+        self.bulletv[1] = 1
+        self.bulletvl1 = self.bulletv.rotate(15)
+        self.bulletvr1 = self.bulletv.rotate(-15)
+        self.bulletvl2 = self.bulletv.rotate(30)
+        self.bulletvr2 = self.bulletv.rotate(-30)
+
     def add_gem(self, gem):
-        self.gems.append(gem)
+        self.gems.append(gem.name)
         self.statusbar.set_collected(len(self.gems))
+        self.powerup_counter += 1
+        if self.powerup_counter >= 10:
+            self.powerupbar.set_color(gem.color)
         
     def manage_key(self, e):
         if e.type == pygame.QUIT:
             self.quit = True
         elif e.type == pygame.KEYDOWN:
             if e.key == pygame.K_SPACE:
-                self.left_click = True
+                self.space = True
         elif e.type == pygame.KEYUP:
             if e.key == pygame.K_ESCAPE:
                 self.show_warp_zone = not self.show_warp_zone
             elif e.key == pygame.K_SPACE:
-                self.left_click = False
+                self.space = False
         elif e.type == pygame.MOUSEBUTTONDOWN:
             if e.button == 1:
                 self.left_click = True
+            if e.button == 3:
+                if self.powerup_counter >= 10:
+                    if self.powerupbar.color == "orange":
+                        self.main_plane.life = 10
+                    self.powerupbar.activate_powerup()
+                    self.powerup_counter = 0
             
         elif e.type == pygame.MOUSEBUTTONUP:
             buttons = pygame.mouse.get_pressed()
             if buttons[0] == 0:
                 self.left_click = False
-        
+                        
     def shoot_bullet(self, tick):
         if self.tick_count <= 0:
-            self.bullets.add(sprites.BlueBullet(self.bulletv, (self.main_plane.rect.x + self.main_plane.rect.w / 2 - 4, self.main_plane.rect.y - 20)))
+            self.bullets.add(sprites.BlueBullet(self.bulletv, (self.main_plane.rect.centerx - 8, self.main_plane.rect.y - 30)))
+            if self.powerupbar.blue_active > 0:
+                self.bullets.add(sprites.BlueBullet(self.bulletvl1, (self.main_plane.rect.x + 10, self.main_plane.rect.y - 30)))
+                self.bullets.add(sprites.BlueBullet(self.bulletvr1, (self.main_plane.rect.x + self.main_plane.rect.w - 40, self.main_plane.rect.y - 30)))
+                self.bullets.add(sprites.BlueBullet(self.bulletvl2, (self.main_plane.rect.x - 20, self.main_plane.rect.y - 30)))
+                self.bullets.add(sprites.BlueBullet(self.bulletvr2, (self.main_plane.rect.x + self.main_plane.rect.w - 20, self.main_plane.rect.y - 30)))
             self.tick_count = 60
     
     def move_main_plane_mouse(self, tick):
-        move = 750 / tick 
+        if self.powerupbar.yellow_active:
+            move = 50000 / tick
+        else:
+            move = 750 / tick 
         x, y = pygame.mouse.get_pos()
         x -= self.main_plane.rect.w / 2
         y -= self.main_plane.rect.h / 2
@@ -291,9 +341,8 @@ class Player(pygame.sprite.Sprite):
     def update(self, tick):
         self.bullets.update(tick)
         self.move_main_plane_mouse(tick)
-        if self.left_click and not self.show_warp_zone:
+        if (self.left_click or self.space) and not self.show_warp_zone:
             self.shoot_bullet(tick)
         self.tick_count -= tick
         self.main_plane.update(tick)
         
-    

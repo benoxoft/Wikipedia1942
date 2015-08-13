@@ -2,5 +2,36 @@
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="791eb906-2e36-a14a-b94b-554550f2725f" kpf_version="5" name="wiki1942.komodoproject">
 <preference-set idref="791eb906-2e36-a14a-b94b-554550f2725f" id="project" preftype="project">
+<preference-set id="Invocations">
+<preference-set id="Project">
+  <string id="cookieparams"></string>
+  <string relative="path" id="cwd"></string>
+  <string id="documentRoot"></string>
+  <string id="executable-params"></string>
+  <string id="filename"></string>
+  <string id="getparams"></string>
+  <string id="language">Python</string>
+  <string id="mpostparams"></string>
+  <string id="params"></string>
+  <string id="postparams"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="request-method">GET</string>
+  <boolean id="show-dialog">1</boolean>
+  <boolean id="sim-cgi">0</boolean>
+  <boolean id="use-console">0</boolean>
+  <string id="userCGIEnvironment"></string>
+  <string id="userEnvironment"></string>
+</preference-set>
+</preference-set>
+  <string id="currentInvocationLanguage">Python</string>
+  <string relative="path" id="import_dirname"></string>
+  <string id="language">Python</string>
+  <string id="lastInvocation">Project</string>
+  <string id="last_local_directory">None</string>
+  <string id="last_remote_directory">None</string>
+  <string id="python3DefaultInterpreter">/Users/bpaquet/anaconda/envs/pygame/bin/python3.4</string>
+  <string id="python3ExtraPaths">/Users/bpaquet/anaconda/envs/pygame:/Users/bpaquet/anaconda/envs/pygame/lib/python3.4/site-packages</string>
+  <string id="pythonDefaultInterpreter">/Users/bpaquet/anaconda/envs/pygame27/bin/python2.7</string>
+  <string id="pythonExtraPaths">/Users/bpaquet/anaconda/envs/pygame27/lib/python2.7/site-packages</string>
 </preference-set>
 </project>
