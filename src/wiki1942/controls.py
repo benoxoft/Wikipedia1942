@@ -190,12 +190,12 @@ class AircraftAIBack(pygame.sprite.Sprite):
             self.kill()
             self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
                                 
-            if random.randint(0, 100) >= 50:
-                v = pygame.math.Vector2(0, 1)
-                for i in range(0, 8):
-                    v = v.rotate(45)
-                    d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
-                    self.bullets.add(d)
+            #if random.randint(0, 100) >= 50:
+            v = pygame.math.Vector2(0, 1)
+            for i in range(0, 8):
+                v = v.rotate(45)
+                d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
+                self.bullets.add(d)
             
         if self.init:
             self.plane.move_y(1000 / tick)
@@ -206,7 +206,7 @@ class AircraftAIBack(pygame.sprite.Sprite):
                 
         self.grenade_cooldown -= tick
         if self.grenade_cooldown <= 0:
-            self.grenade_cooldown = random.randint(200, 500)
+            self.grenade_cooldown = random.randint(300, 600)
             self.shoot_grenade()
             
         self.decision_cooldown -= tick
@@ -254,12 +254,12 @@ class AircraftAIFront(pygame.sprite.Sprite):
             self.kill()
             self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
                                 
-            if random.randint(0, 100) >= 50:
-                v = pygame.math.Vector2(0, 1)
-                for i in range(0, 8):
-                    v = v.rotate(45)
-                    d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
-                    self.bullets.add(d)
+            #if random.randint(0, 100) >= 50:
+            #    v = pygame.math.Vector2(0, 1)
+            #    for i in range(0, 8):
+            #        v = v.rotate(45)
+            #        d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
+            #        self.bullets.add(d)
             
         if self.init:
             self.plane.move_y(1000 / tick)
@@ -317,7 +317,7 @@ class EnemyFactory():
         self.planes.update(tick)
         
         self.tick_count -= tick
-        if self.tick_count <= 0:
+        if self.tick_count <= 0 and len(self.planes) <= 5:
             self.tick_count = random.randint(10, 3000)
             if random.randint(1, 5) == 1:
                 plane = sprites.Aircraft06()

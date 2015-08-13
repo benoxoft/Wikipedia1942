@@ -761,9 +761,9 @@ class PowerupBar(pygame.sprite.Sprite):
         elif self.color == "blue":
             self.blue_active = 30000
         elif self.color == "yellow":
-            self.yellow_active = 30000
+            self.yellow_active = 60000
         elif self.color == "grey":
-            self.grey_active = 30000
+            self.grey_active = 60000
         self.color = ""
         
     def draw_progress_bars(self):
@@ -776,11 +776,11 @@ class PowerupBar(pygame.sprite.Sprite):
             bar.fill((0, 0, 200))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 16))
         if self.yellow_active > 0:
-            bar = pygame.Surface((self.yellow_active / 30, 8))
+            bar = pygame.Surface((self.yellow_active / 60, 8))
             bar.fill((200, 200, 0))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 32))
         if self.grey_active > 0:
-            bar = pygame.Surface((self.grey_active / 30, 8))
+            bar = pygame.Surface((self.grey_active / 60, 8))
             bar.fill((180, 180, 180))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 48))
             
