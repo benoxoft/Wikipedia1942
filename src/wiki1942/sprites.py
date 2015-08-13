@@ -77,6 +77,31 @@ class GemTooltip(pygame.sprite.Sprite):
         if not self.gem.alive():
             self.kill()
         
+class Bomb(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.transform.scale2x(media.rocket_purple)
+        self.rect = pygame.Rect((random.randint(120, 660), -60, self.image.get_rect().w, self.image.get_rect().h))
+        self.speed = random.randint(200, 300)
+        self.tick_count = 0
+        self.explode = False
+        
+    def set_collide(self):
+        pass
+    
+    def set_drawing(self):
+        pass
+    
+    def update(self, tick):
+        move = self.speed /tick    
+        self.rect.y += move
+        self.tick_count += tick
+        if self.tick_count > 100 and self.rect.y > 0:
+            self.explode = random.randint(1, 50)  == 15 or self.explode
+        if self.rect.y > 720:
+            self.kill()
+            
 class Explosion(pygame.sprite.Sprite):
     
     def __init__(self, initpos):
@@ -86,6 +111,7 @@ class Explosion(pygame.sprite.Sprite):
         self.index = 0
         self.image = self.frames[0]
         self.rect = pygame.Rect((initpos[0], initpos[1], self.image.get_rect().w, self.image.get_rect().h))
+        media.explode.play()
         
     def create_frame(self, position):
         image = pygame.Surface((128, 128))
@@ -135,7 +161,7 @@ class Aircraft(pygame.sprite.Sprite):
         #self.frames[0].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
         #self.frames[1].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
                 
-        self.life = 3
+        self.life = 5
         
     def set_drawing(self):
         self.rect = self.drawing_rect
@@ -169,7 +195,6 @@ class Aircraft(pygame.sprite.Sprite):
         media.hit.play()
         if self.life == 0:
             self.kill()
-            media.explode.play()
             
     def create_image(self, show_rotor):
         image = pygame.Surface(self.base_image.get_size()).convert()
@@ -482,11 +507,13 @@ class WarpPage(pygame.sprite.Sprite):
     
     def next_page(self):
         if self.current_page < self.count_pages():
+            media.beep.play()
             self.current_page += 1
             self.update()
             
     def previous_page(self):
         if self.current_page > 1:
+            media.beep.play()
             self.current_page -= 1
             self.update()
             
@@ -503,6 +530,7 @@ class WarpPage(pygame.sprite.Sprite):
                     if ir.collidepoint(pygame.mouse.get_pos()):
                         self.messagebox = MessageBox(word, self)
                         self.warp_to_word = word
+                        media.beep.play()
                         
     def count_pages(self):
         c = int(math.ceil(len(self.found_links) / 16.0))
@@ -617,9 +645,11 @@ class MessageBox(pygame.sprite.Sprite):
         print pygame.mouse.get_pos()
         if self.ok_rect.collidepoint(pygame.mouse.get_pos()):
             self.yes = True
+            media.beep.play()
         elif self.cancel_rect.collidepoint(pygame.mouse.get_pos()):
             self.no = True
-    
+            media.beep.play()
+            
     def update(self, *args):
         self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h))
         self.image.blit(self.base_image, (0, 0))
@@ -727,30 +757,30 @@ class PowerupBar(pygame.sprite.Sprite):
     def activate_powerup(self):
         media.powerup.play()
         if self.color == "green":
-            self.green_active = 300000
+            self.green_active = 180000
         elif self.color == "blue":
-            self.blue_active = 60000
+            self.blue_active = 30000
         elif self.color == "yellow":
-            self.yellow_active = 60000
+            self.yellow_active = 30000
         elif self.color == "grey":
-            self.grey_active = 60000
+            self.grey_active = 30000
         self.color = ""
         
     def draw_progress_bars(self):
         if self.green_active > 0:
-            bar = pygame.Surface((self.green_active / 300, 8))
+            bar = pygame.Surface((self.green_active / 180, 8))
             bar.fill((0, 200, 0))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 0))
         if self.blue_active > 0:
-            bar = pygame.Surface((self.blue_active / 60, 8))
+            bar = pygame.Surface((self.blue_active / 30, 8))
             bar.fill((0, 0, 200))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 16))
         if self.yellow_active > 0:
-            bar = pygame.Surface((self.yellow_active / 60, 8))
+            bar = pygame.Surface((self.yellow_active / 30, 8))
             bar.fill((200, 200, 0))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 32))
         if self.grey_active > 0:
-            bar = pygame.Surface((self.grey_active / 60, 8))
+            bar = pygame.Surface((self.grey_active / 30, 8))
             bar.fill((180, 180, 180))
             self.image.blit(bar, (self.base_image.get_rect().w + 32, 48))
             

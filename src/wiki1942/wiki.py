@@ -4,7 +4,9 @@ import wikipedia
 MAX_LEVEL_TIME = 600000
 
 def next_gem(current_time, gems):
-    if gems[0][1] <= current_time:
+    if len(gems) == 0:
+        return None
+    elif gems[0][1] <= current_time:
         return gems.pop(0)[0]
     else:
         return None
@@ -26,6 +28,8 @@ def gemify_page(wiki_page):
     return links
 
 def open_page(page_title):
+    if page_title == "random":
+        return randomize_page()
     try:
         page = wikipedia.page(page_title)
     except wikipedia.PageError:

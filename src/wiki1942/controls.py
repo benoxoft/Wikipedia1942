@@ -45,7 +45,16 @@ class GameControl:
             plane.set_collide()
             
         for plane in pygame.sprite.groupcollide(self.enemy.planes, self.player.bullets, False, True):
-            plane.hit()
+            if isinstance(plane, sprites.Bomb):
+                plane.kill()
+                self.explosions.add(sprites.Explosion((plane.rect.x, plane.rect.y)))
+                v = pygame.math.Vector2(0, 1)
+                for i in range(0, 8):
+                    v = v.rotate(45)
+                    d = sprites.Debris(v, (plane.rect.centerx, plane.rect.centery))
+                    self.enemy.bullets.add(d)
+            else:
+                plane.hit()
             
         for plane in self.enemy.planes:
             plane.set_drawing()
@@ -53,7 +62,7 @@ class GameControl:
         self.player.main_plane.set_collide()
         for player in pygame.sprite.groupcollide(self.player_group, self.enemy.bullets, False, True):
             if self.powerupbar.green_active:
-                self.powerupbar.green_active -= 60000
+                self.powerupbar.green_active -= 30000
                 continue
             self.player.main_plane.hit()
             self.statusbar.set_current_life(self.player.main_plane.life)
@@ -62,6 +71,11 @@ class GameControl:
     def update(self):
         tick = self.clock.tick(24)
         
+        if len(self.gems.links) == 0 and len(self.gems.gems) == 0:
+           self.player.show_warp_zone = True
+           if len(self.player.gems) == 0:
+                self.player.gems.append("random")
+           
         if not self.player.show_warp_zone:
             self.warp.reset()
             self.player.update(tick)
@@ -152,7 +166,71 @@ class GemFactory(pygame.sprite.Group):
         self.tooltips.empty()
         self.update_status_bar()
         
-class AircraftAI(pygame.sprite.Sprite):
+class AircraftAIBack(pygame.sprite.Sprite):
+    
+    def __init__(self, plane, bullets, explosions):
+        pygame.sprite.Sprite.__init__(self)
+        self.plane = plane
+        self.bullets = bullets
+        self.explosions = explosions
+        self.grenade_cooldown = 20
+        self.decision_cooldown = 0
+        self.x_move = 0
+        self.y_move = 1
+        self.y_speed = 100
+        self.init = True
+    
+    def shoot_grenade(self):
+        v = pygame.math.Vector2(random.randint(0, 200) - 100, random.randint(0, 100)).normalize()
+        d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
+        self.bullets.add(d)
+    
+    def update(self, tick):
+        if not self.plane.alive():
+            self.kill()
+            self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
+                                
+            if random.randint(0, 100) >= 50:
+                v = pygame.math.Vector2(0, 1)
+                for i in range(0, 8):
+                    v = v.rotate(45)
+                    d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
+                    self.bullets.add(d)
+            
+        if self.init:
+            self.plane.move_y(1000 / tick)
+            if self.plane.rect.y >= 20:
+                self.init = False
+            else:
+                return
+                
+        self.grenade_cooldown -= tick
+        if self.grenade_cooldown <= 0:
+            self.grenade_cooldown = random.randint(200, 500)
+            self.shoot_grenade()
+            
+        self.decision_cooldown -= tick
+        if self.decision_cooldown <= 0:
+            self.decision_cooldown = random.randint(1000, 2000)
+            if random.randint(1, 2) == 1:
+                self.x_move = -1
+            else:
+                self.x_move = 1
+            if self.plane.rect.y > 200:
+                self.y_move = -1
+            elif self.plane.rect.y < 100:
+                self.y_move = 1
+                
+        move_x = 160 / tick * self.x_move
+        move_y = 60 / tick * self.y_move
+        
+        self.plane.move(move_x, move_y)
+        if self.plane.rect.x < 60:
+            self.x_move = 1
+        elif self.plane.rect.x > 960:
+            self.x_move = -1
+
+class AircraftAIFront(pygame.sprite.Sprite):
     
     def __init__(self, plane, bullets, explosions):
         pygame.sprite.Sprite.__init__(self)
@@ -167,10 +245,7 @@ class AircraftAI(pygame.sprite.Sprite):
         self.init = True
         self.bulletv = pygame.math.Vector2()
         self.bulletv.y = -1
-        
-    def shoot_grenade(self):
-        pass
-    
+            
     def shoot_bullet(self):
         self.bullets.add(sprites.OrangeBullet(self.bulletv, (self.plane.rect.x + self.plane.rect.w / 2 + 4, self.plane.rect.y + 20)))
 
@@ -197,7 +272,7 @@ class AircraftAI(pygame.sprite.Sprite):
         if self.gun_cooldown <= 0:
             self.gun_cooldown = random.randint(500, 800)
             self.shoot_bullet()
-            
+                        
         self.decision_cooldown -= tick
         if self.decision_cooldown <= 0:
             self.decision_cooldown = 1000
@@ -205,7 +280,7 @@ class AircraftAI(pygame.sprite.Sprite):
                 self.x_move = -1
             else:
                 self.x_move = 1
-            if self.plane.rect.y > 400:
+            if self.plane.rect.y > 500:
                 self.y_move = -1
             elif self.plane.rect.y < 200:
                 self.y_move = 1
@@ -221,10 +296,22 @@ class EnemyFactory():
         self.bullets = pygame.sprite.Group()
         self.planes = pygame.sprite.Group()
         self.ais = pygame.sprite.Group()
-        self.tick_count = 600
+        self.bombs = pygame.sprite.Group()
+        self.tick_count = 6000
         self.explosions = explosions
+        self.bomb_tick = 16000
         
     def update(self, tick):
+        for bomb in self.bombs:
+            if bomb.explode:
+                bomb.kill()
+                self.explosions.add(sprites.Explosion((bomb.rect.centerx, bomb.rect.centery)))
+                v = pygame.math.Vector2(0, 1)
+                for i in range(0, 8):
+                    v = v.rotate(45)
+                    d = sprites.Debris(v, (bomb.rect.centerx, bomb.rect.centery))
+                    self.bullets.add(d)
+        
         self.ais.update(tick)
         self.bullets.update(tick)
         self.planes.update(tick)
@@ -232,11 +319,21 @@ class EnemyFactory():
         self.tick_count -= tick
         if self.tick_count <= 0:
             self.tick_count = random.randint(10, 3000)
-            return
-            plane = sprites.Aircraft03()
-            ai = AircraftAI(plane, self.bullets, self.explosions)
+            if random.randint(1, 5) == 1:
+                plane = sprites.Aircraft06()
+                ai = AircraftAIBack(plane, self.bullets, self.explosions)
+            else:
+                plane = sprites.Aircraft05()
+                ai = AircraftAIFront(plane, self.bullets, self.explosions)
             self.ais.add(ai)
             self.planes.add(plane)
+
+        self.bomb_tick -= tick
+        if self.bomb_tick <= 0:
+            self.bomb_tick = random.randint(1000, 5000)
+            bomb = sprites.Bomb()
+            self.planes.add(bomb)
+            self.bombs.add(bomb)
             
 class Player(pygame.sprite.Sprite):
 
@@ -248,6 +345,7 @@ class Player(pygame.sprite.Sprite):
         self.space = False
         self.show_warp_zone = False
         self.tick_count = 0
+        self.tick_count_power = 0
         self.main_plane = sprites.Aircraft10()
         self.main_plane.rect.x = 500
         self.main_plane.rect.y = 800
@@ -288,7 +386,10 @@ class Player(pygame.sprite.Sprite):
             if e.button == 3:
                 if self.powerup_counter >= 10:
                     if self.powerupbar.color == "orange":
-                        self.main_plane.life = 10
+                        self.main_plane.life += 3
+                        if self.main_plane.life > 10:
+                            self.main_plane.life = 10
+                        self.statusbar.set_current_life(self.main_plane.life)
                     self.powerupbar.activate_powerup()
                     self.powerup_counter = 0
             
@@ -299,13 +400,14 @@ class Player(pygame.sprite.Sprite):
                         
     def shoot_bullet(self, tick):
         if self.tick_count <= 0:
+            self.tick_count = 60
             self.bullets.add(sprites.BlueBullet(self.bulletv, (self.main_plane.rect.centerx - 8, self.main_plane.rect.y - 30)))
-            if self.powerupbar.blue_active > 0:
+            if self.powerupbar.blue_active > 0 and self.tick_count_power <= 0:
                 self.bullets.add(sprites.BlueBullet(self.bulletvl1, (self.main_plane.rect.x + 10, self.main_plane.rect.y - 30)))
                 self.bullets.add(sprites.BlueBullet(self.bulletvr1, (self.main_plane.rect.x + self.main_plane.rect.w - 40, self.main_plane.rect.y - 30)))
                 self.bullets.add(sprites.BlueBullet(self.bulletvl2, (self.main_plane.rect.x - 20, self.main_plane.rect.y - 30)))
                 self.bullets.add(sprites.BlueBullet(self.bulletvr2, (self.main_plane.rect.x + self.main_plane.rect.w - 20, self.main_plane.rect.y - 30)))
-            self.tick_count = 60
+                self.tick_count_power = 180
     
     def move_main_plane_mouse(self, tick):
         if self.powerupbar.yellow_active:
@@ -344,5 +446,6 @@ class Player(pygame.sprite.Sprite):
         if (self.left_click or self.space) and not self.show_warp_zone:
             self.shoot_bullet(tick)
         self.tick_count -= tick
+        self.tick_count_power -= tick
         self.main_plane.update(tick)
         
