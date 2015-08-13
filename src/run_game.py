@@ -1,4 +1,7 @@
 import pygame
+pygame.init()
+pygame.mixer.init()
+
 import os
 
 import wiki1942
@@ -7,8 +10,6 @@ import wiki1942.sprites
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 
-pygame.init()
-pygame.mixer.init()
 screen = pygame.display.set_mode((1024,720), pygame.HWSURFACE)
 pygame.display.set_caption("Wiki 1942")
 

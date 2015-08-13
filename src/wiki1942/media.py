@@ -29,6 +29,8 @@ def load_sound(snd):
 
 def load_all_sounds():
     for f in os.listdir(os.path.join('media', 'sounds')):
+        if f == '.DS_Store':
+            continue
         filename, _ = os.path.splitext(f)
         fullf = os.path.abspath(os.path.join('media', 'sounds', f))
         setattr(m, filename, load_sound(fullf))

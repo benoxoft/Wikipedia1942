@@ -2,6 +2,7 @@ import pygame
 import sprites
 import wiki
 import random
+import media
 
 class GameControl:
     
@@ -35,7 +36,8 @@ class GameControl:
     def manage_collisions(self):
         for gem in pygame.sprite.groupcollide(self.gems.gems, self.player_group, True, False):
             self.player.add_gem(gem.name)
-        
+            media.gem.play()
+            
         for plane in self.enemy.planes:
             plane.set_collide()
             

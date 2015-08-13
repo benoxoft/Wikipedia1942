@@ -135,7 +135,7 @@ class Aircraft(pygame.sprite.Sprite):
         #self.frames[0].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
         #self.frames[1].blit(r, (self.collide_rect.x - self.drawing_rect.x, self.collide_rect.y - self.drawing_rect.y))
                 
-        self.life = 5
+        self.life = 3
         
     def set_drawing(self):
         self.rect = self.drawing_rect
@@ -166,8 +166,10 @@ class Aircraft(pygame.sprite.Sprite):
     def hit(self):
         self.image = self.hit_image
         self.life -= 1
+        media.hit.play()
         if self.life == 0:
             self.kill()
+            media.explode.play()
             
     def create_image(self, show_rotor):
         image = pygame.Surface(self.base_image.get_size()).convert()
