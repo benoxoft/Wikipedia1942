@@ -18,8 +18,8 @@ def randomize_page():
 def gemify_page(wiki_page):
     links_len = len(wiki_page.links)
     spawn_time = MAX_LEVEL_TIME / links_len
-    if spawn_time > 2000:
-        spawn_time = 2000
+    if spawn_time > 1000:
+        spawn_time = 1000
     
     links = [[link,] for link in wiki_page.links]
     random.shuffle(links)

@@ -15,8 +15,6 @@ pygame.display.set_caption("Wiki 1942")
 
 def main():
     
-    
-    
     gc = wiki1942.controls.GameControl(screen)
     while not gc.player.quit:
         for e in pygame.event.get():

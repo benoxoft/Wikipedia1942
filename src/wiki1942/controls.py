@@ -29,11 +29,14 @@ class GameControl:
         
         self.warp = sprites.WarpPage()
         self.warp.current_page = 1
-                
+        self.gameover = sprites.Gameover()
+        
     def manage_event(self, e):
         if e.type == pygame.MOUSEBUTTONUP:
             if self.player.show_warp_zone:
                 self.warp.click()
+            elif self.player.gameover:
+                self.gameover.click()
         self.player.manage_key(e)
         
     def manage_collisions(self):
@@ -66,6 +69,14 @@ class GameControl:
                 continue
             self.player.main_plane.hit()
             self.statusbar.set_current_life(self.player.main_plane.life)
+            if self.player.main_plane.life == 0:
+                self.player.gameover = True
+                self.explosions.add(sprites.Explosion((self.player.main_plane.rect.x, self.player.main_plane.rect.y)))
+                self.explosions.add(sprites.Explosion((self.player.main_plane.rect.x - 10, self.player.main_plane.rect.y - 40)))
+                self.explosions.add(sprites.Explosion((self.player.main_plane.rect.x - 20, self.player.main_plane.rect.y - 30)))
+                self.explosions.add(sprites.Explosion((self.player.main_plane.rect.x - 30, self.player.main_plane.rect.y - 20)))
+                self.explosions.add(sprites.Explosion((self.player.main_plane.rect.x - 40, self.player.main_plane.rect.y - 10)))
+                
         self.player.main_plane.set_drawing()
         
     def update(self):
@@ -73,10 +84,12 @@ class GameControl:
         
         if len(self.gems.links) == 0 and len(self.gems.gems) == 0:
            self.player.show_warp_zone = True
+           self.player.main_plane.life = 10
+           self.statusbar.set_current_life(self.player.main_plane.life)
            if len(self.player.gems) == 0:
                 self.player.gems.append("random")
            
-        if not self.player.show_warp_zone:
+        if not self.player.show_warp_zone and not self.player.gameover:
             self.warp.reset()
             self.player.update(tick)
             self.enemy.update(tick)
@@ -85,7 +98,7 @@ class GameControl:
             self.gems.update(tick)
             self.ui_group.update(tick)
             self.manage_collisions()
-            self.explosions.update(tick)
+        self.explosions.update(tick)
             
         self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
         self.screen.blit(self.cloud.image, self.cloud.rect)
@@ -99,31 +112,48 @@ class GameControl:
         self.explosions.draw(self.screen)
         self.ui_group.draw(self.screen)
                 
-        if self.player.show_warp_zone:
+        if self.player.gameover:
+            self.screen.blit(self.gameover.image, self.gameover.rect)
+            self.gameover.update(tick)
+            
+            if self.gameover.try_again:
+                self.player.gameover = False
+                self.player.reset_hard()
+                self.enemy.reset()
+                self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
+                self.player.show_warp_zone = False
+                self.gameover.try_again = False
+                
+            elif self.gameover.quit:
+                self.player.quit = True
+            
+        elif self.player.show_warp_zone:
             self.warp.set_found_links(self.player.gems)
             self.warp.update(tick)
             self.screen.blit(self.warp.image, self.warp.rect)
             
             if self.warp.accept:
                 self.player.show_warp_zone = False
-                self.player.gems = []
+                self.player.reset()
+                self.enemy.reset()
                 self.gems.change_page(self.warp.warp_to_word)
-                
+
         pygame.display.update()
     
-class GemFactory(pygame.sprite.Group):
+class GemFactory:
     
     def __init__(self, statusbar, powerupbar, main_plane):
         self.gems = pygame.sprite.Group()
         self.tooltips = pygame.sprite.Group()
         self.current_page = wiki.randomize_page()
         self.links = wiki.gemify_page(self.current_page)
+
         self.tick_count = 0
         self.statusbar = statusbar
         self.powerupbar = powerupbar
         self.main_plane = main_plane
         self.update_status_bar()
-        
+            
     def gravity_pull(self, tick):
         if self.powerupbar.grey_active > 0:
             rect = pygame.Rect((self.main_plane.rect.centerx - 180, self.main_plane.rect.centery - 180, 360, 360))
@@ -190,7 +220,6 @@ class AircraftAIBack(pygame.sprite.Sprite):
             self.kill()
             self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
                                 
-            #if random.randint(0, 100) >= 50:
             v = pygame.math.Vector2(0, 1)
             for i in range(0, 8):
                 v = v.rotate(45)
@@ -253,14 +282,7 @@ class AircraftAIFront(pygame.sprite.Sprite):
         if not self.plane.alive():
             self.kill()
             self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
-                                
-            #if random.randint(0, 100) >= 50:
-            #    v = pygame.math.Vector2(0, 1)
-            #    for i in range(0, 8):
-            #        v = v.rotate(45)
-            #        d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
-            #        self.bullets.add(d)
-            
+                                            
         if self.init:
             self.plane.move_y(1000 / tick)
             if self.plane.rect.y >= 20:
@@ -301,6 +323,14 @@ class EnemyFactory():
         self.explosions = explosions
         self.bomb_tick = 16000
         
+    def reset(self):
+        self.bullets.empty()
+        self.planes.empty()
+        self.ais.empty()
+        self.bombs.empty()
+        self.tick_count = 6000
+        self.bomb_tick = 16000
+    
     def update(self, tick):
         for bomb in self.bombs:
             if bomb.explode:
@@ -319,7 +349,7 @@ class EnemyFactory():
         self.tick_count -= tick
         if self.tick_count <= 0 and len(self.planes) <= 5:
             self.tick_count = random.randint(10, 3000)
-            if random.randint(1, 5) == 1:
+            if random.randint(1, 10) == 1:
                 plane = sprites.Aircraft06()
                 ai = AircraftAIBack(plane, self.bullets, self.explosions)
             else:
@@ -344,6 +374,7 @@ class Player(pygame.sprite.Sprite):
         self.left_click = False
         self.space = False
         self.show_warp_zone = False
+        self.gameover = False
         self.tick_count = 0
         self.tick_count_power = 0
         self.main_plane = sprites.Aircraft10()
@@ -362,6 +393,21 @@ class Player(pygame.sprite.Sprite):
         self.bulletvl2 = self.bulletv.rotate(30)
         self.bulletvr2 = self.bulletv.rotate(-30)
 
+    def reset(self):
+        self.main_plane.rect.x = 500
+        self.main_plane.rect.y = 800
+        self.gems = []
+        self.tick_count = 0
+        self.tick_count_power = 0
+        self.bullets.empty()        
+    
+    def reset_hard(self):
+        self.reset()
+        self.powerup_counter = 0
+        self.powerupbar.reset()
+        self.main_plane.life = 10
+        self.statusbar.set_current_life(10)
+        
     def add_gem(self, gem):
         self.gems.append(gem.name)
         self.statusbar.set_collected(len(self.gems))
@@ -410,6 +456,9 @@ class Player(pygame.sprite.Sprite):
                 self.tick_count_power = 180
     
     def move_main_plane_mouse(self, tick):
+        if self.gameover:
+            return
+        
         if self.powerupbar.yellow_active:
             move = 50000 / tick
         else:
@@ -443,7 +492,7 @@ class Player(pygame.sprite.Sprite):
     def update(self, tick):
         self.bullets.update(tick)
         self.move_main_plane_mouse(tick)
-        if (self.left_click or self.space) and not self.show_warp_zone:
+        if (self.left_click or self.space) and not self.show_warp_zone and not self.gameover:
             self.shoot_bullet(tick)
         self.tick_count -= tick
         self.tick_count_power -= tick

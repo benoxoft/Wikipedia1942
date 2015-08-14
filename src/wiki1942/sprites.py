@@ -639,9 +639,6 @@ class MessageBox(pygame.sprite.Sprite):
         return (cancel, (116, 256))
     
     def click(self):
-        print self.owner.rect.x, self.rect.x
-        print self.cancel_rect
-        print self.ok_rect
         print pygame.mouse.get_pos()
         if self.ok_rect.collidepoint(pygame.mouse.get_pos()):
             self.yes = True
@@ -720,6 +717,13 @@ class PowerupBar(pygame.sprite.Sprite):
         self.grey_active = 0
         self.color = ""
         
+    def reset(self):
+        self.green_active = 0
+        self.blue_active = 0
+        self.yellow_active = 0
+        self.grey_active = 0
+        self.color = ""
+    
     def create_image(self):
         self.image = pygame.Surface((self.rect.w, self.rect.h))
         colorkey = self.base_image.get_at((0,0))        
@@ -800,3 +804,46 @@ class PowerupBar(pygame.sprite.Sprite):
             
         self.create_image()
         
+class Gameover(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.gameover
+        self.image = self.base_image
+        self.rect = pygame.Rect(((1024 - self.base_image.get_rect().w) / 2, (720 - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.try_again_rect = None
+        self.quit_rect = None
+        self.create_image()
+        self.try_again = False
+        self.quit = False
+        self.timing = 1000
+        
+    def create_image(self):
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.image.blit(self.base_image, (0, 0))
+        f = media.get_font(32)
+        s = f.render("Game Over!!", True, GEM_FONT_COLOR)    
+        self.image.blit(s, (150, 56))
+        
+        buttons = media.get_font(16)
+        
+        s = buttons.render("Try Again", True, GEM_FONT_COLOR)
+        self.image.blit(s, (120, 312))
+        self.try_again_rect = pygame.Rect((self.rect.x + 120, self.rect.y + +312, s.get_rect().w, s.get_rect().h))
+        s = buttons.render("Quit", True, GEM_FONT_COLOR)
+        self.image.blit(s, (464, 312))
+        self.quit_rect = pygame.Rect((self.rect.x + 464, self.rect.y + 312, s.get_rect().w, s.get_rect().h))
+        
+        colorkey = self.image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+        
+    def click(self):
+        if self.try_again_rect.collidepoint(pygame.mouse.get_pos()):
+            self.try_again = True
+            media.beep.play()
+        elif self.quit_rect.collidepoint(pygame.mouse.get_pos()):
+            self.quit = True
+            media.beep.play()
+    
+    def update(self, *args):
+        pass    
