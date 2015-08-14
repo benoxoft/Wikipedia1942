@@ -392,6 +392,9 @@ class Background(pygame.sprite.Sprite):
         self.tick_count = 0
         self.rect = pygame.Rect((0, 2480, 1024, 720))
         
+    def reset(self):
+        self.tick_count = 0
+        
     def update(self, tick):
         self.tick_count += tick
         self.rect.y = 2480 - 2480 * self.tick_count / 600000.0

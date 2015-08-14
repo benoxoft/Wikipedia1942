@@ -123,6 +123,7 @@ class GameControl:
                 self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
                 self.player.show_warp_zone = False
                 self.gameover.try_again = False
+                self.bg.reset()
                 
             elif self.gameover.quit:
                 self.player.quit = True
@@ -137,7 +138,8 @@ class GameControl:
                 self.player.reset()
                 self.enemy.reset()
                 self.gems.change_page(self.warp.warp_to_word)
-
+                self.bg.reset()
+                
         pygame.display.update()
     
 class GemFactory:
