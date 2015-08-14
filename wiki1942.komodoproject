@@ -29,6 +29,7 @@
   <string id="lastInvocation">Project</string>
   <string id="last_local_directory">None</string>
   <string id="last_remote_directory">None</string>
+  <long id="prefs_version">1</long>
   <string id="python3DefaultInterpreter">/Users/bpaquet/anaconda/envs/pygame/bin/python3.4</string>
   <string id="python3ExtraPaths">/Users/bpaquet/anaconda/envs/pygame:/Users/bpaquet/anaconda/envs/pygame/lib/python3.4/site-packages</string>
   <string id="pythonDefaultInterpreter">/Users/bpaquet/anaconda/envs/pygame27/bin/python2.7</string>

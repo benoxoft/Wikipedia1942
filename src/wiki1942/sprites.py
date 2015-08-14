@@ -846,4 +846,253 @@ class Gameover(pygame.sprite.Sprite):
             media.beep.play()
     
     def update(self, *args):
-        pass    
+        pass
+    
+class Gameplay(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.base_image = media.page3
+        self.rect = pygame.Rect(((1024 - self.base_image.get_rect().w) / 2, (720 - self.base_image.get_rect().h) / 2, self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.close = False
+        self.current_page = 1
+        
+        self.pages = ["""
+Hitler invaded Wikipedia!
+
+You must defeat him and make Wikipedia free again!
+
+This game is inspired by the Hitler Wikipedia game.
+When the game start, a random page from Wikipedia will be generated.
+All the links on this page will appear as gems in the game.
+By collecting gems, you can warp to these pages.
+You must collect gems and warp to other Wikipedia pages until you
+reach the Hitler page.
+This is where Hitler is hiding.  Find him and defeat him.
+""",
+"""
+Hit space or left-click to shoot bullets.
+Hit Esc. to make the Warp zone appear.
+
+You start the game with 10 HP.
+Everytime you take a hit, you lose 1 HP.
+If you finish a level (no gems left), you will recover all your life.
+
+You can warp to another page anytime during the game by pressing Esc.
+However, if you do so you won't recover your life.
+If you drop to 0 HP, it's Game Over.
+
+Gathering gems will allow you to use power-ups.  
+Right-click to activate the power-up shown in the lower-left corner.
+""",
+"""
+You must collect 10 gems to get a power-up.
+The power-up will appear in the lower-left corner.
+Power-ups are associated with gem colors.
+If you don't use your power and collect another gem,
+the power-up will change to the last color you collected.
+
+
+Green: Activate a shield that last for 3 minutes.
+       If you take a hit, the shield will absorb it.
+Blue: Increase the power of your gun for 30 seconds.
+Yellow: Increase your agility for 60 seconds.
+Grey:  Activate a gem magnet for 60 seconds.
+       The gems will fly in your direction when you get close.
+Red : Regenerate 3 HP.
+"""]
+        self.create_image()
+
+    def next_page(self):
+        if self.current_page < self.count_pages():
+            media.beep.play()
+            self.current_page += 1
+            self.create_image()
+        else:
+            media.beep.play()
+            self.close = True
+            self.current_page = 1
+            self.create_image()
+            
+    def previous_page(self):
+        if self.current_page > 1:
+            media.beep.play()
+            self.current_page -= 1
+            self.create_image()
+            
+    def manage_event(self, e):
+        if e.type == pygame.MOUSEBUTTONUP:
+            if self.next_rect.collidepoint(pygame.mouse.get_pos()):
+                self.next_page()
+            elif self.prev_rect.collidepoint(pygame.mouse.get_pos()):
+                self.previous_page()
+        elif e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_ESCAPE:
+                self.close = True
+                self.current_page = 1
+                self.create_image()
+                
+    def count_pages(self):
+        return len(self.pages)
+    
+    def create_next_button(self):
+        buttons_font = media.get_font(16)
+        if self.current_page == self.count_pages():
+            snext = buttons_font.render("Close", True, GEM_FONT_COLOR)
+            self.next_rect = pygame.Rect((self.rect.x + 648, self.rect.y + 594, snext.get_rect().w, snext.get_rect().h))
+            return (snext, (648, 594))
+        else:
+            snext = buttons_font.render("Next", True, GEM_FONT_COLOR)
+            self.next_rect = pygame.Rect((self.rect.x + 660, self.rect.y + 594, snext.get_rect().w, snext.get_rect().h))
+            return (snext, (660, 594))
+        
+    def create_previous_button(self):
+        buttons_font = media.get_font(16)
+        sprevious = buttons_font.render("Previous", True, GEM_FONT_COLOR)
+        self.prev_rect = pygame.Rect((self.rect.x + 430, self.rect.y + 594, sprevious.get_rect().w, sprevious.get_rect().h))
+        return (sprevious, (430, 594))
+    
+    def create_pages(self):
+        pages_font = media.get_font(20)
+        pages = pages_font.render("Page: " + str(self.current_page) + " / " + str(self.count_pages()), True, GEM_FONT_COLOR)
+        return (pages, (48, 592))
+    
+    def create_title(self):
+        title_font = media.get_font(32)
+        if self.current_page == 1:
+            s = "Introduction"
+        elif self.current_page == 2:
+            s = "Gameplay"
+        else:
+            s = "Power-ups"
+        title = title_font.render(s, True, GEM_FONT_COLOR)
+        return (title, ((self.base_image.get_rect().w - title.get_rect().w) / 2, 48))
+    
+    def render_page(self):
+        item_font = media.get_font(9)
+        page_items = self.pages[self.current_page - 1].split("\n")
+            
+        for i in range(0, len(page_items)):
+            y = 140 + 24 * i
+            item_rect = pygame.Rect((self.rect.x + 48, self.rect.y + y, 700, 24))
+            item = item_font.render(page_items[i], True, GEM_FONT_COLOR)
+            self.image.blit(item, (56, y + 8))
+                                    
+    def create_image(self):
+        self.image = pygame.Surface((self.base_image.get_rect().w, self.base_image.get_rect().h))
+        self.image.blit(self.base_image, (0, 0))
+        self.image.blit(*self.create_title())
+        self.image.blit(*self.create_pages())
+        self.image.blit(*self.create_next_button())
+        self.image.blit(*self.create_previous_button())
+        self.render_page()
+                    
+        colorkey = self.base_image.get_at((0,0))        
+        self.image.set_colorkey(colorkey, pygame.RLEACCEL)
+
+    def update(self, *args):
+        pass
+    
+class Credits(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.close = False
+        
+    def manage_event(self):
+        pass
+    
+class Gamestart(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.start_game_rect = None
+        self.gameplay_rect = None
+        self.credits_rect = None
+        self.quit_rect = None
+        self.image = self.create_image()
+        self.rect = pygame.Rect((0, 0, 1024, 720))
+        self.position = 0
+        self.cursor = media.Aircraft_10
+        
+        self.quit = False
+        self.start_game = False
+        self.show_gameplay = False
+        self.show_credits = False
+        
+    def create_wikipedia(self):
+        font = media.get_font(64)
+        s = font.render("Wikipedia", True, GEM_FONT_COLOR)
+        return (s, ((1024 - s.get_rect().w) / 2, 120))
+    
+    def create_1942(self):
+        font = media.get_font(128)
+        s = font.render("1942", True, GEM_FONT_COLOR)
+        return (s, ((1024 - s.get_rect().w) / 2, 200))
+    
+    def create_start_game(self):
+        font = media.get_font(32)
+        s = font.render("Start Game", True, GEM_FONT_COLOR)
+        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 450, s.get_rect().w, s.get_rect().h)
+        return (s, rect)
+    
+    def create_gameplay(self):
+        font = media.get_font(32)
+        s = font.render("Gameplay", True, GEM_FONT_COLOR)
+        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 500, s.get_rect().w, s.get_rect().h)
+        return (s, rect)
+    
+    def create_credits(self):
+        font = media.get_font(32)
+        s = font.render("Credits", True, GEM_FONT_COLOR)
+        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 550, s.get_rect().w, s.get_rect().h)
+        return (s, rect)
+
+    def create_quit(self):
+        font = media.get_font(32)
+        s = font.render("Quit", True, GEM_FONT_COLOR)
+        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 600, s.get_rect().w, s.get_rect().h)
+        return (s, rect)
+       
+    def create_image(self):
+        image = pygame.Surface((1024, 720))
+        image.blit(*self.create_wikipedia())
+        image.blit(*self.create_1942())
+        
+        s, self.start_game_rect = self.create_start_game()
+        image.blit(s, self.start_game_rect)
+        
+        s, self.gameplay_rect = self.create_gameplay()
+        image.blit(s, self.gameplay_rect)
+        
+        s, self.credits_rect = self.create_credits()
+        image.blit(s, self.credits_rect)
+        
+        s, self.quit_rect = self.create_quit()
+        image.blit(s, self.quit_rect)
+        
+        return image
+    
+    def manage_event(self, e):
+        if e.type == pygame.QUIT:
+            self.quit = True
+            return        
+        if e.type != pygame.MOUSEBUTTONUP:
+            return
+        
+        pos = pygame.mouse.get_pos()
+        if self.start_game_rect.collidepoint(pos):
+            self.start_game = True
+            media.beep.play()
+        elif self.gameplay_rect.collidepoint(pos):
+            self.show_gameplay = True
+            media.beep.play()
+        elif self.credits_rect.collidepoint(pos):
+            self.show_credits = True
+            media.beep.play()
+        elif self.quit_rect.collidepoint(pos):
+            self.quit = True
+    
+    def update(self):
+        pass
+    
