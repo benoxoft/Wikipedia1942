@@ -396,8 +396,19 @@ class Background(pygame.sprite.Sprite):
         self.tick_count = 0
         
     def update(self, tick):
+        return
         self.tick_count += tick
         self.rect.y = 2480 - 2480 * self.tick_count / 600000.0
+
+class BackgroundLava(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = media.lava
+        self.rect = self.image.get_rect()
+        
+    def update(self, *args):
+        pass
 
 class EndlessCloud(pygame.sprite.Sprite):
     
@@ -1098,4 +1109,39 @@ class Gamestart(pygame.sprite.Sprite):
     
     def update(self):
         pass
+    
+class SkullShield(pygame.sprite.Sprite):
+    
+    def __init__(self, plane, initvector):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = media.skull_copy
+        self.rect = self.image.get_rect()
+        self.plane = plane
+        self.v = initvector
+        self.life = 10
+        self.tick_count = 0
+        
+    def hit(self):
+        self.life -= 1
+    
+    def set_collide(self):
+        pass
+    
+    def set_drawing(self):
+        pass
+    
+    def update(self, tick):
+        if self.life <= 0:
+            self.life = 10
+            self.rect = pygame.Rect((-1000, -1000, 0, 0))
+            self.tick_count = 30000
+            
+        if not self.plane.alive():
+            self.kill()
+        self.tick_count -= tick
+        self.v = self.v.rotate(800 / tick)
+        if self.tick_count <= 0:
+            self.rect.x = self.plane.rect.centerx + 80 * self.v.x - 10
+            self.rect.y = self.plane.rect.centery + 80 * self.v.y
+        
     

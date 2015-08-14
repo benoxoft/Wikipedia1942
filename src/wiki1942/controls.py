@@ -4,6 +4,8 @@ import wiki
 import random
 import media
 
+HITLER = "Adolf Hitler"
+
 class GameControl:
     
     def __init__(self, screen):
@@ -11,6 +13,8 @@ class GameControl:
         self.screen = screen
         
         self.bg = sprites.Background()
+        self.bg_lava = sprites.BackgroundLava()
+        
         self.cloud = sprites.EndlessCloud()
 
         self.explosions = pygame.sprite.Group()
@@ -67,7 +71,7 @@ class GameControl:
             if self.powerupbar.green_active:
                 self.powerupbar.green_active -= 30000
                 continue
-            self.player.main_plane.hit()
+            #self.player.main_plane.hit()
             self.statusbar.set_current_life(self.player.main_plane.life)
             if self.player.main_plane.life == 0:
                 self.player.gameover = True
@@ -93,14 +97,20 @@ class GameControl:
             self.warp.reset()
             self.player.update(tick)
             self.enemy.update(tick)
-            self.bg.update(tick)
+            if self.gems.current_page.title == HITLER:
+                self.bg_lava.update(tick)
+            else:
+                self.bg.update(tick)
             self.cloud.update(tick)
             self.gems.update(tick)
-            self.ui_group.update(tick)
             self.manage_collisions()
+        self.ui_group.update(tick)
         self.explosions.update(tick)
             
-        self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
+        if self.gems.current_page.title == HITLER:
+            self.screen.blit(self.bg_lava.image, (0, 0), self.bg_lava.rect)
+        else:
+            self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
         self.screen.blit(self.cloud.image, self.cloud.rect)
 
         self.screen.blit(self.player.main_plane.image, self.player.rect)
@@ -119,8 +129,8 @@ class GameControl:
             if self.gameover.try_again:
                 self.player.gameover = False
                 self.player.reset_hard()
-                self.enemy.reset()
                 self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
+                self.enemy.reset(self.gems.current_page.title == HITLER)
                 self.player.show_warp_zone = False
                 self.gameover.try_again = False
                 self.bg.reset()
@@ -136,8 +146,8 @@ class GameControl:
             if self.warp.accept:
                 self.player.show_warp_zone = False
                 self.player.reset()
-                self.enemy.reset()
                 self.gems.change_page(self.warp.warp_to_word)
+                self.enemy.reset(self.gems.current_page.title == HITLER)
                 self.bg.reset()
                 
         pygame.display.update()
@@ -198,6 +208,89 @@ class GemFactory:
         self.tooltips.empty()
         self.update_status_bar()
         
+class SkullGrenade(pygame.sprite.Sprite):
+    
+    def __init__(self, skull, bullets):
+        pygame.sprite.Sprite.__init__(self)
+        self.skull = skull
+        self.bullets = bullets
+        self.grenade_cooldown = random.randint(0, 1000)
+        
+    def shoot_grenade(self):
+        v = pygame.math.Vector2(random.randint(0, 200) - 100, random.randint(0, 200) - 100).normalize()
+        d = sprites.Debris(v, (self.skull.rect.centerx, self.skull.rect.centery))
+        self.bullets.add(d)
+
+    def update(self, tick):
+        self.grenade_cooldown -= tick
+        if self.grenade_cooldown <= 0:
+            self.grenade_cooldown = random.randint(500, 1200)
+            self.shoot_grenade()
+        
+class Hitler(pygame.sprite.Sprite):
+    
+    def __init__(self, plane, bullets, explosions):
+        pygame.sprite.Sprite.__init__(self)
+        self.plane = plane
+        self.bullets = bullets
+        self.explosions = explosions
+        self.gun_cooldown = 2000
+        self.decision_cooldown = 0
+        self.x_move = 0
+        self.y_move = 1
+        self.y_speed = 100
+        self.init = True
+        self.bulletv = pygame.math.Vector2()
+        self.bulletv.y = -1
+        
+    def shoot_bullet(self):
+        self.bullets.add(sprites.PurpleBullet(self.bulletv, (self.plane.rect.x, self.plane.rect.y + 20)))
+        self.bullets.add(sprites.PurpleBullet(self.bulletv, (self.plane.rect.x + self.plane.rect.w, self.plane.rect.y + 20)))
+    
+    def update(self, tick):
+        if not self.plane.alive():
+            self.kill()
+            self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
+                                
+            v = pygame.math.Vector2(0, 1)
+            for i in range(0, 8):
+                v = v.rotate(45)
+                d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
+                self.bullets.add(d)
+            
+        if self.init:
+            self.plane.move_y(1000 / tick)
+            if self.plane.rect.y >= 20:
+                self.init = False
+            else:
+                return
+                
+        self.gun_cooldown -= tick
+        if self.gun_cooldown <= 0:
+            self.gun_cooldown = 300
+            self.shoot_bullet()
+            
+        self.decision_cooldown -= tick
+        if self.decision_cooldown <= 0:
+            self.decision_cooldown = random.randint(500, 1000)
+            if random.randint(1, 2) == 1:
+                self.x_move = -1
+            else:
+                self.x_move = 1
+            if self.plane.rect.y > 400:
+                self.y_move = -1
+            elif self.plane.rect.y < 100:
+                self.y_move = 1
+                
+        move_x = 400 / tick * self.x_move
+        move_y = 100 / tick * self.y_move
+        
+        self.plane.move(move_x, move_y)
+        if self.plane.rect.x < 160:
+            self.x_move = 1
+        elif self.plane.rect.x > 860:
+            self.x_move = -1
+    
 class AircraftAIBack(pygame.sprite.Sprite):
     
     def __init__(self, plane, bullets, explosions):
@@ -205,7 +298,7 @@ class AircraftAIBack(pygame.sprite.Sprite):
         self.plane = plane
         self.bullets = bullets
         self.explosions = explosions
-        self.grenade_cooldown = 20
+        self.grenade_cooldown = 2000
         self.decision_cooldown = 0
         self.x_move = 0
         self.y_move = 1
@@ -324,15 +417,19 @@ class EnemyFactory():
         self.tick_count = 6000
         self.explosions = explosions
         self.bomb_tick = 16000
+        self.hitler = True
+        self.hitler_started = False
+        self.hitler_beaten = False
         
-    def reset(self):
+    def reset(self, hitler=False):
         self.bullets.empty()
         self.planes.empty()
         self.ais.empty()
         self.bombs.empty()
         self.tick_count = 6000
         self.bomb_tick = 16000
-    
+        self.hitler = hitler
+        
     def update(self, tick):
         for bomb in self.bombs:
             if bomb.explode:
@@ -349,16 +446,46 @@ class EnemyFactory():
         self.planes.update(tick)
         
         self.tick_count -= tick
-        if self.tick_count <= 0 and len(self.planes) <= 5:
-            self.tick_count = random.randint(10, 3000)
-            if random.randint(1, 10) == 1:
-                plane = sprites.Aircraft06()
-                ai = AircraftAIBack(plane, self.bullets, self.explosions)
-            else:
-                plane = sprites.Aircraft05()
-                ai = AircraftAIFront(plane, self.bullets, self.explosions)
+        if self.hitler and self.hitler_started:
+            if len(self.planes) == 0:
+                self.hitler_beaten = True
+        elif self.hitler and not self.hitler_started and self.tick_count <= 0:
+            self.hitler_started = True
+            plane = sprites.Aircraft01()
+            plane.life = 50
+
+            v = pygame.math.Vector2(1, 0)
+            ss = sprites.SkullShield(plane, v)
+            self.planes.add(ss)
+            ai = SkullGrenade(ss, self.bullets)
+            self.ais.add(ai)
+
+            v = v.rotate(120)
+            ss = sprites.SkullShield(plane, v)
+            self.planes.add(ss)
+            ai = SkullGrenade(ss, self.bullets)
+            self.ais.add(ai)
+
+            v = v.rotate(120)
+            ss = sprites.SkullShield(plane, v)
+            self.planes.add(ss)
+            ai = SkullGrenade(ss, self.bullets)
+            self.ais.add(ai)
+
+            ai = Hitler(plane, self.bullets, self.explosions)
             self.ais.add(ai)
             self.planes.add(plane)
+        else:
+            if self.tick_count <= 0 and len(self.planes) <= 5:
+                self.tick_count = random.randint(10, 3000)
+                if random.randint(1, 10) == 1:
+                    plane = sprites.Aircraft06()
+                    ai = AircraftAIBack(plane, self.bullets, self.explosions)
+                else:
+                    plane = sprites.Aircraft05()
+                    ai = AircraftAIFront(plane, self.bullets, self.explosions)
+                self.ais.add(ai)
+                self.planes.add(plane)
 
         self.bomb_tick -= tick
         if self.bomb_tick <= 0:
