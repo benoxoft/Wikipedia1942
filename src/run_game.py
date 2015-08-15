@@ -24,8 +24,6 @@ def main():
         for e in pygame.event.get():
             if main_page.show_gameplay:
                 gameplay_page.manage_event(e)
-            elif main_page.show_credits:
-                credits_page.manage_event(e)
             else:
                 main_page.manage_event(e)
             
@@ -39,12 +37,6 @@ def main():
             if gameplay_page.close:
                 gameplay_page.close = False 
                 main_page.show_gameplay = False
-        elif main_page.show_credits:
-            credits_page.update()
-            screen.blit(credits_page.image, (0, 0))
-            if credits_page.close:
-                credits_page.close = False
-                main_page.show_credits = False
                 
         pygame.display.update()
         

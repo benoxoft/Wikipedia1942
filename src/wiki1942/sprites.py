@@ -551,7 +551,7 @@ class WarpPage(pygame.sprite.Sprite):
                     if ir.collidepoint(pygame.mouse.get_pos()):
                         self.messagebox = MessageBox(word, self)
                         self.warp_to_word = word
-                        media.beep.play()
+                        #media.beep.play()
                         
     def count_pages(self):
         c = int(math.ceil(len(self.found_links) / 16.0))
@@ -1029,7 +1029,6 @@ class Gamestart(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.start_game_rect = None
         self.gameplay_rect = None
-        self.credits_rect = None
         self.quit_rect = None
         self.image = self.create_image()
         self.rect = pygame.Rect((0, 0, 1024, 720))
@@ -1039,7 +1038,6 @@ class Gamestart(pygame.sprite.Sprite):
         self.quit = False
         self.start_game = False
         self.show_gameplay = False
-        self.show_credits = False
         
     def create_wikipedia(self):
         font = media.get_font(64)
@@ -1063,16 +1061,10 @@ class Gamestart(pygame.sprite.Sprite):
         rect = pygame.Rect((1024 - s.get_rect().w) / 2, 500, s.get_rect().w, s.get_rect().h)
         return (s, rect)
     
-    def create_credits(self):
-        font = media.get_font(32)
-        s = font.render("Credits", True, GEM_FONT_COLOR)
-        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 550, s.get_rect().w, s.get_rect().h)
-        return (s, rect)
-
     def create_quit(self):
         font = media.get_font(32)
         s = font.render("Quit", True, GEM_FONT_COLOR)
-        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 600, s.get_rect().w, s.get_rect().h)
+        rect = pygame.Rect((1024 - s.get_rect().w) / 2, 550, s.get_rect().w, s.get_rect().h)
         return (s, rect)
        
     def create_image(self):
@@ -1085,10 +1077,7 @@ class Gamestart(pygame.sprite.Sprite):
         
         s, self.gameplay_rect = self.create_gameplay()
         image.blit(s, self.gameplay_rect)
-        
-        s, self.credits_rect = self.create_credits()
-        image.blit(s, self.credits_rect)
-        
+                
         s, self.quit_rect = self.create_quit()
         image.blit(s, self.quit_rect)
         
@@ -1107,9 +1096,6 @@ class Gamestart(pygame.sprite.Sprite):
             media.beep.play()
         elif self.gameplay_rect.collidepoint(pos):
             self.show_gameplay = True
-            media.beep.play()
-        elif self.credits_rect.collidepoint(pos):
-            self.show_credits = True
             media.beep.play()
         elif self.quit_rect.collidepoint(pos):
             self.quit = True
@@ -1169,4 +1155,73 @@ class HitlerLifebar(pygame.sprite.Sprite):
         self.rect.y = 80 + 540 - (540 * self.current_life/ self.max_life)
         self.rect.h = self.image.get_rect().h
                 
-            
+class Ending(pygame.sprite.Sprite):
+    
+    def __init__(self):
+        self.image = pygame.Surface((1024, 720))
+        self.image.set_alpha(255)
+        self.rect = self.image.get_rect()
+        self.alpha = 0
+        self.show_credits = False
+
+    def create_credits(self):
+        self.image = pygame.Surface((1024, 720*2))
+        self.rect = pygame.Rect((0, 0, 1024, 720))        
+        font = media.get_font(32)
+        s = font.render("Congratulations!", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 20+720))
+        
+        font = media.get_font(16)
+        s = font.render("Hitler has been defeated!", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 120+720))
+        s = font.render("Wikipedia is free again!", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 150+720))
+        
+        s = font.render("Entry for pyweek #20", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 220+720))
+        s = font.render("https://github.com/benoxoft/Wikipedia1942", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 250+720))
+
+        s = font.render("All art content from opengameart.org", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 350+720))
+
+        s = font.render("opengameart.org/content/rotating-crystal-animation-8-step", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 380+720))
+
+        s = font.render("opengameart.org/content/aircrafts", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 410+720))
+
+        s = font.render("opengameart.org/content/orthographic-outdoor-tiles", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 440+720))
+
+        s = font.render("opengameart.org/content/fluffy-clouds", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 470+720))
+
+        s = font.render("opengameart.org/content/10-basic-message-boxes", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 500+720))
+
+        s = font.render("opengameart.org/content/explosion-animated", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 530+720))
+
+        s = font.render("opengameart.org/content/skull", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 560+720))
+
+        s = font.render("opengameart.org/content/confrontation", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 590+720))
+
+        s = font.render("Thank you for playing!", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 670+720))
+        self.show_credits = True
+        
+    def update(self, tick):
+        self.alpha += tick / 20
+        if self.alpha >= 255 and not self.show_credits:
+            self.alpha = 255
+            self.create_credits()
+        self.image.set_alpha(self.alpha)
+
+        if self.show_credits:
+            self.rect.y -= tick / 20
+            if self.rect.y < -720:
+                self.rect.y = -720
+    

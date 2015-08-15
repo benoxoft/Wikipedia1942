@@ -36,6 +36,7 @@ class GameControl:
         self.warp = sprites.WarpPage()
         self.warp.current_page = 1
         self.gameover = sprites.Gameover()
+        self.ending = sprites.Ending()
         
     def manage_event(self, e):
         if e.type == pygame.MOUSEBUTTONUP:
@@ -73,7 +74,7 @@ class GameControl:
             if self.powerupbar.green_active:
                 self.powerupbar.green_active -= 30000
                 continue
-            #self.player.main_plane.hit()
+            self.player.main_plane.hit()
             self.statusbar.set_current_life(self.player.main_plane.life)
             if self.player.main_plane.life == 0:
                 self.player.gameover = True
@@ -95,7 +96,7 @@ class GameControl:
            if len(self.player.gems) == 0:
                 self.player.gems.append("random")
            
-        if not self.player.show_warp_zone and not self.player.gameover:
+        if not self.player.show_warp_zone and not self.player.gameover and not self.enemy.hitler_beaten:
             self.warp.reset()
             self.player.update(tick)
             self.enemy.update(tick)
@@ -135,6 +136,7 @@ class GameControl:
             self.gameover.update(tick)
             
             if self.gameover.try_again:
+                pygame.mixer.music.stop()
                 self.player.gameover = False
                 self.player.reset_hard()
                 self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
@@ -165,6 +167,13 @@ class GameControl:
                         pygame.mixer.music.play(-1)
                         self.enemy.tick_count = 60000
                         self.enemy.bomb_tick = 70000
+                        self.player.main_plane.life = 10
+                        self.statusbar.set_current_life(10)
+                        
+        if self.enemy.hitler_beaten:
+            self.ending.update(tick)
+            self.screen.blit(self.ending.image, self.ending.rect)
+
         pygame.display.update()
     
 class GemFactory:
@@ -471,6 +480,7 @@ class EnemyFactory():
         if self.hitler and self.hitler_started:
             if len(self.planes) == 0:
                 self.hitler_beaten = True
+                
         elif self.hitler and not self.hitler_started and self.tick_count <= 0:
             self.hitler_started = True
             plane = sprites.Aircraft01()
@@ -545,7 +555,8 @@ class Player(pygame.sprite.Sprite):
         self.bulletvr1 = self.bulletv.rotate(-15)
         self.bulletvl2 = self.bulletv.rotate(30)
         self.bulletvr2 = self.bulletv.rotate(-30)
-        self.gems.append("Hitler")
+        #self.gems.append("Hitler")
+        
     def reset(self):
         self.main_plane.rect.x = 500
         self.main_plane.rect.y = 800
