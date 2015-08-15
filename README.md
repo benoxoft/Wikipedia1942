@@ -4,7 +4,7 @@ Entry for pyweek #20
 ## Requirements
 python 2.7<br>
 pygame (latest version)<br>
-wikipedia (pip install wikipedia)
+wikipedia (included in the source code, otherwise pip install wikipedia)
 
 ## Game
 
