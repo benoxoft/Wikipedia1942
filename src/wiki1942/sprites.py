@@ -10,6 +10,7 @@ import math
 #http://opengameart.org/content/10-basic-message-boxes
 #http://opengameart.org/content/explosion-animated
 #http://opengameart.org/content/skull
+#http://opengameart.org/content/lava-background-6-screen-resolutions
 
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
@@ -1206,8 +1207,11 @@ class Ending(pygame.sprite.Sprite):
         s = font.render("opengameart.org/content/skull", True, GEM_FONT_COLOR)
         self.image.blit(s, ((1024 - s.get_rect().w) / 2, 560+720))
 
-        s = font.render("opengameart.org/content/confrontation", True, GEM_FONT_COLOR)
+        s = font.render("opengameart.org/content/lava-background-6-screen-resolutions", True, GEM_FONT_COLOR)
         self.image.blit(s, ((1024 - s.get_rect().w) / 2, 590+720))
+
+        s = font.render("opengameart.org/content/confrontation", True, GEM_FONT_COLOR)
+        self.image.blit(s, ((1024 - s.get_rect().w) / 2, 620+720))
 
         s = font.render("Thank you for playing!", True, GEM_FONT_COLOR)
         self.image.blit(s, ((1024 - s.get_rect().w) / 2, 670+720))
