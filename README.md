@@ -51,7 +51,7 @@ http://opengameart.org/content/aircrafts<br>
 http://opengameart.org/content/orthographic-outdoor-tiles (http://blog-buch.rhcloud.com)<br>
 http://opengameart.org/content/fluffy-clouds<br>
 http://opengameart.org/content/10-basic-message-boxes (http://cgartsenal.blogspot.ca/)<br>
-http://opengameart.org/content/explosion-animated (villeseppanen.com)<br>
+http://opengameart.org/content/explosion-animated (http://villeseppanen.com/)<br>
 http://opengameart.org/content/skull<br>
 http://opengameart.org/content/lava-background-6-screen-resolutions<br>
 http://opengameart.org/content/confrontation
