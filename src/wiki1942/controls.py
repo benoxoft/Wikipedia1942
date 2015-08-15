@@ -30,7 +30,7 @@ class GameControl:
         self.enemy = EnemyFactory(self.explosions)
         self.ui_group = pygame.sprite.Group()
         self.ui_group.add(self.statusbar)
-        self.ui_group.add(self.powerupbar)
+        #self.ui_group.add(self.powerupbar)
         self.gems = GemFactory(self.statusbar, self.powerupbar, self.player.main_plane)
         
         self.warp = sprites.WarpPage()
@@ -95,6 +95,7 @@ class GameControl:
            self.statusbar.set_current_life(self.player.main_plane.life)
            if len(self.player.gems) == 0:
                 self.player.gems.append("random")
+           self.warp.level_cleared = True
            
         if not self.player.show_warp_zone and not self.player.gameover and not self.enemy.hitler_beaten:
             self.warp.reset()
@@ -107,6 +108,7 @@ class GameControl:
             self.cloud.update(tick)
             self.gems.update(tick)
             self.manage_collisions()
+            self.powerupbar.update(tick)
         self.ui_group.update(tick)
         self.explosions.update(tick)
             
@@ -124,6 +126,7 @@ class GameControl:
         self.gems.tooltips.draw(self.screen)
         self.explosions.draw(self.screen)
         self.ui_group.draw(self.screen)
+        self.screen.blit(self.powerupbar.image, self.powerupbar.rect)
         
         if self.gems.current_page.title == HITLER:
             if self.enemy.hitler_plane is not None:
@@ -157,6 +160,7 @@ class GameControl:
                 self.screen.blit(self.warp.image, self.warp.rect)
                 
                 if self.warp.accept:
+                    self.warp.level_cleared = False
                     self.player.show_warp_zone = False
                     self.player.reset()
                     self.gems.change_page(self.warp.warp_to_word)

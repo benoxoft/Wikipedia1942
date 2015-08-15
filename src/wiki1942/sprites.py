@@ -517,6 +517,7 @@ class WarpPage(pygame.sprite.Sprite):
         self.messagebox = None
         self.warp_to_word = None
         self.accept = False
+        self.level_cleared = False
         
     def reset(self):
         self.current_page = 1
@@ -580,7 +581,10 @@ class WarpPage(pygame.sprite.Sprite):
     
     def create_title(self):
         title_font = media.get_font(32)
-        title = title_font.render("Warp zone", True, GEM_FONT_COLOR)
+        if self.level_cleared:
+            title = title_font.render("Page cleared!", True, GEM_FONT_COLOR)
+        else:
+            title = title_font.render("Warp zone", True, GEM_FONT_COLOR)
         return (title, ((self.base_image.get_rect().w - title.get_rect().w) / 2, 48))
     
     def render_page(self):
