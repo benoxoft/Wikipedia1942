@@ -12,7 +12,7 @@ def next_gem(current_time, gems):
         return None
 
 def randomize_page():
-    return open_page("Hitler")
+    #return open_page("Hitler")
     return open_page(wikipedia.random())
 
 def gemify_page(wiki_page):
@@ -34,7 +34,7 @@ def open_page(page_title):
         page = wikipedia.page(page_title)
     except wikipedia.PageError:
         return randomize_page()
-    except wikipedia.ValueError:
+    except ValueError:
         return open_page(page_title)
     except Exception as e:
         alternative =  random.randint(0, len(e.options)-1)

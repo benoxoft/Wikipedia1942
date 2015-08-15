@@ -9,6 +9,7 @@ import math
 #http://opengameart.org/content/fluffy-clouds
 #http://opengameart.org/content/10-basic-message-boxes
 #http://opengameart.org/content/explosion-animated
+#http://opengameart.org/content/skull
 
 GEM_FRAMES = 8
 GEM_ROTATE_TICK = 150
@@ -35,7 +36,7 @@ class Gem(pygame.sprite.Sprite):
         self.frames = self.create_frames()
         self.image = self.frames[0]
         self.speed = random.randint(100, 200)
-        self.rect = pygame.Rect((random.randint(120, 660), -60, 32, 32))
+        self.rect = pygame.Rect((random.randint(100, 900), -60, 32, 32))
         
     def create_frames(self):
         return [self.create_gem_frame(i) for i in range(0, GEM_FRAMES)]
@@ -227,6 +228,12 @@ class Aircraft01(Aircraft):
     def __init__(self):
         Aircraft.__init__(self, 1)
         
+    def hit(self):
+        self.image = self.hit_image
+        if self.life > 0:
+            self.life -= 1
+        media.hit.play()
+
     def draw_rotor(self, image):
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2 - 18, 10), self.rotor_image.get_rect())
         image.blit(self.rotor_image, (image.get_rect().w / 2 - self.rotor_image.get_rect().w / 2 + 4, 0), self.rotor_image.get_rect())

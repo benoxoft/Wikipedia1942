@@ -5,7 +5,7 @@ import random
 import media
 
 HITLER = "Adolf Hitler"
-HITLER_LIFE = 50
+HITLER_LIFE = 100
 
 class GameControl:
     
@@ -113,7 +113,7 @@ class GameControl:
             self.screen.blit(self.bg_lava.image, (0, 0), self.bg_lava.rect)
         else:
             self.screen.blit(self.bg.image, (0, 0), self.bg.rect)
-        self.screen.blit(self.cloud.image, self.cloud.rect)
+            self.screen.blit(self.cloud.image, self.cloud.rect)
 
         self.screen.blit(self.player.main_plane.image, self.player.rect)
         self.enemy.planes.draw(self.screen)
@@ -147,17 +147,24 @@ class GameControl:
                 self.player.quit = True
             
         elif self.player.show_warp_zone:
-            self.warp.set_found_links(self.player.gems)
-            self.warp.update(tick)
-            self.screen.blit(self.warp.image, self.warp.rect)
-            
-            if self.warp.accept:
+            if self.gems.current_page.title == HITLER:
                 self.player.show_warp_zone = False
-                self.player.reset()
-                self.gems.change_page(self.warp.warp_to_word)
-                self.enemy.reset(self.gems.current_page.title == HITLER)
-                self.bg.reset()
+            else:
+                self.warp.set_found_links(self.player.gems)
+                self.warp.update(tick)
+                self.screen.blit(self.warp.image, self.warp.rect)
                 
+                if self.warp.accept:
+                    self.player.show_warp_zone = False
+                    self.player.reset()
+                    self.gems.change_page(self.warp.warp_to_word)
+                    self.enemy.reset(self.gems.current_page.title == HITLER)
+                    self.bg.reset()
+                    if self.gems.current_page.title == HITLER:
+                        pygame.mixer.music.load(media.Confrontation_file)
+                        pygame.mixer.music.play(-1)
+                        self.enemy.tick_count = 60000
+                        self.enemy.bomb_tick = 70000
         pygame.display.update()
     
 class GemFactory:
@@ -222,7 +229,7 @@ class SkullGrenade(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.skull = skull
         self.bullets = bullets
-        self.grenade_cooldown = random.randint(0, 1000)
+        self.grenade_cooldown = random.randint(1000, 2000)
         
     def shoot_grenade(self):
         v = pygame.math.Vector2(random.randint(0, 200) - 100, random.randint(0, 200) - 100).normalize()
@@ -242,7 +249,7 @@ class Hitler(pygame.sprite.Sprite):
         self.plane = plane
         self.bullets = bullets
         self.explosions = explosions
-        self.gun_cooldown = 2000
+        self.gun_cooldown = 5000
         self.decision_cooldown = 0
         self.x_move = 0
         self.y_move = 1
@@ -250,21 +257,24 @@ class Hitler(pygame.sprite.Sprite):
         self.init = True
         self.bulletv = pygame.math.Vector2()
         self.bulletv.y = -1
+        self.explosion_counter = 60
         
     def shoot_bullet(self):
+        if self.plane.life <= 0:
+            return
         self.bullets.add(sprites.PurpleBullet(self.bulletv, (self.plane.rect.x, self.plane.rect.y + 20)))
         self.bullets.add(sprites.PurpleBullet(self.bulletv, (self.plane.rect.x + self.plane.rect.w, self.plane.rect.y + 20)))
     
     def update(self, tick):
-        if not self.plane.alive():
-            self.kill()
-            self.explosions.add(sprites.Explosion((self.plane.rect.x, self.plane.rect.y)))
-                                
-            v = pygame.math.Vector2(0, 1)
-            for i in range(0, 8):
-                v = v.rotate(45)
-                d = sprites.Debris(v, (self.plane.rect.centerx, self.plane.rect.centery))
-                self.bullets.add(d)
+        if self.plane.life <= 0:
+            self.plane.hit()
+            self.explosions.add(sprites.Explosion((self.plane.rect.x + random.randint(0, 100) - 50, self.plane.rect.y + random.randint(0, 100) - 50)))
+            self.explosion_counter -= 1
+            if self.explosion_counter == 0:
+                for i in range(0, 10):
+                    self.explosions.add(sprites.Explosion((self.plane.rect.x + random.randint(0, 100) - 50, self.plane.rect.y + random.randint(0, 100) - 50)))
+                self.plane.kill()
+                self.kill()
             
         if self.init:
             self.plane.move_y(1000 / tick)
@@ -273,6 +283,9 @@ class Hitler(pygame.sprite.Sprite):
             else:
                 return
                 
+        if self.plane.life <= HITLER_LIFE / 2 and self.gun_cooldown > 1000:
+            self.gun_cooldown = 0
+            
         self.gun_cooldown -= tick
         if self.gun_cooldown <= 0:
             self.gun_cooldown = 300
@@ -280,7 +293,7 @@ class Hitler(pygame.sprite.Sprite):
             
         self.decision_cooldown -= tick
         if self.decision_cooldown <= 0:
-            self.decision_cooldown = random.randint(500, 1000)
+            self.decision_cooldown = random.randint(800, 1600)
             if random.randint(1, 2) == 1:
                 self.x_move = -1
             else:
@@ -290,7 +303,7 @@ class Hitler(pygame.sprite.Sprite):
             elif self.plane.rect.y < 100:
                 self.y_move = 1
                 
-        move_x = 400 / tick * self.x_move
+        move_x = 350 / tick * self.x_move
         move_y = 100 / tick * self.y_move
         
         self.plane.move(move_x, move_y)
@@ -426,7 +439,7 @@ class EnemyFactory():
         self.explosions = explosions
         self.bomb_tick = 16000
         self.hitler_plane = None
-        self.hitler = True
+        self.hitler = False
         self.hitler_started = False
         self.hitler_beaten = False
         
@@ -461,7 +474,7 @@ class EnemyFactory():
         elif self.hitler and not self.hitler_started and self.tick_count <= 0:
             self.hitler_started = True
             plane = sprites.Aircraft01()
-            plane.life = 50
+            plane.life = HITLER_LIFE
             self.hitler_plane = plane
             
             v = pygame.math.Vector2(1, 0)
@@ -502,6 +515,7 @@ class EnemyFactory():
             self.bomb_tick = random.randint(1000, 5000)
             bomb = sprites.Bomb()
             self.planes.add(bomb)
+            self.bullets.add(bomb)
             self.bombs.add(bomb)
             
 class Player(pygame.sprite.Sprite):
@@ -531,7 +545,7 @@ class Player(pygame.sprite.Sprite):
         self.bulletvr1 = self.bulletv.rotate(-15)
         self.bulletvl2 = self.bulletv.rotate(30)
         self.bulletvr2 = self.bulletv.rotate(-30)
-
+        self.gems.append("Hitler")
     def reset(self):
         self.main_plane.rect.x = 500
         self.main_plane.rect.y = 800
