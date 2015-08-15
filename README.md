@@ -54,5 +54,5 @@ http://opengameart.org/content/10-basic-message-boxes (http://cgartsenal.blogspo
 http://opengameart.org/content/explosion-animated (http://villeseppanen.com/)<br>
 http://opengameart.org/content/skull<br>
 http://opengameart.org/content/lava-background-6-screen-resolutions<br>
-http://opengameart.org/content/confrontation
+http://opengameart.org/content/confrontation<br>
 http://www.fontspace.com/codeman38/press-start-2p
