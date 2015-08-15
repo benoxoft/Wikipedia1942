@@ -5,6 +5,7 @@ import random
 import media
 
 HITLER = "Adolf Hitler"
+HITLER_LIFE = 50
 
 class GameControl:
     
@@ -21,6 +22,7 @@ class GameControl:
         
         self.statusbar = sprites.StatusBar()
         self.powerupbar = sprites.PowerupBar()
+        self.hitlet_hp = sprites.HitlerLifebar(HITLER_LIFE)
         
         self.player = Player(self.statusbar, self.powerupbar)
         self.player_group = pygame.sprite.Group()
@@ -121,7 +123,13 @@ class GameControl:
         self.gems.tooltips.draw(self.screen)
         self.explosions.draw(self.screen)
         self.ui_group.draw(self.screen)
-                
+        
+        if self.gems.current_page.title == HITLER:
+            if self.enemy.hitler_plane is not None:
+                self.hitlet_hp.set_current_life(self.enemy.hitler_plane.life)
+            self.hitlet_hp.update()
+            self.screen.blit(self.hitlet_hp.image, self.hitlet_hp.rect)
+        
         if self.player.gameover:
             self.screen.blit(self.gameover.image, self.gameover.rect)
             self.gameover.update(tick)
@@ -417,6 +425,7 @@ class EnemyFactory():
         self.tick_count = 6000
         self.explosions = explosions
         self.bomb_tick = 16000
+        self.hitler_plane = None
         self.hitler = True
         self.hitler_started = False
         self.hitler_beaten = False
@@ -453,7 +462,8 @@ class EnemyFactory():
             self.hitler_started = True
             plane = sprites.Aircraft01()
             plane.life = 50
-
+            self.hitler_plane = plane
+            
             v = pygame.math.Vector2(1, 0)
             ss = sprites.SkullShield(plane, v)
             self.planes.add(ss)

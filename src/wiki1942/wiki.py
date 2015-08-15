@@ -34,6 +34,8 @@ def open_page(page_title):
         page = wikipedia.page(page_title)
     except wikipedia.PageError:
         return randomize_page()
+    except wikipedia.ValueError:
+        return open_page(page_title)
     except Exception as e:
         alternative =  random.randint(0, len(e.options)-1)
         page = wikipedia.page(e.options[alternative])

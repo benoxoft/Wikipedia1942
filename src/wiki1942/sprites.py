@@ -1144,4 +1144,22 @@ class SkullShield(pygame.sprite.Sprite):
             self.rect.x = self.plane.rect.centerx + 80 * self.v.x - 10
             self.rect.y = self.plane.rect.centery + 80 * self.v.y
         
+class HitlerLifebar(pygame.sprite.Sprite):
     
+    def __init__(self, max_life):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((16, 540))
+        self.rect = pygame.Rect((16, 40, 16, 540))
+        self.current_life = 0
+        self.max_life = max_life
+        
+    def set_current_life(self, current_life):
+        self.current_life = current_life
+    
+    def update(self, *args):
+        self.image = pygame.Surface((16, 540 * self.current_life/ self.max_life))
+        self.image.fill((160, 30, 230))
+        self.rect.y = 80 + 540 - (540 * self.current_life/ self.max_life)
+        self.rect.h = self.image.get_rect().h
+                
+            
