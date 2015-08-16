@@ -199,7 +199,7 @@ class Aircraft(pygame.sprite.Sprite):
             self.kill()
             
     def create_image(self, show_rotor):
-        image = pygame.Surface(self.base_image.get_size()).convert()
+        image = pygame.Surface(self.base_image.get_size())#.convert()
         image.blit(self.base_image, (0, 0), self.base_image.get_rect())
         
         if show_rotor:
