@@ -6,7 +6,7 @@ import sys
 m = sys.modules[__name__]
 
 def load_image(img):
-    image = pygame.image.load(img)
+    image = pygame.image.load(img).convert_alpha()
     #colorkey = image.get_at((0,0))        
     #image.set_colorkey(colorkey, pygame.RLEACCEL)
     return image
