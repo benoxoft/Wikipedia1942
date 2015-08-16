@@ -205,9 +205,10 @@ class Aircraft(pygame.sprite.Sprite):
         if show_rotor:
             self.draw_rotor(image)
         
-        colorkey = self.base_image.get_at((0,0))        
+        image = pygame.transform.rotate(image, 180).convert()
+        colorkey = image.get_at((0,0))        
         image.set_colorkey(colorkey, pygame.RLEACCEL)
-        return pygame.transform.rotate(image, 180)
+        return image
 
     def draw_rotor(self, image):
         pass
@@ -316,8 +317,13 @@ class Aircraft10(Aircraft):
     
     def __init__(self):
         Aircraft.__init__(self, 10)
-        self.frames[0] = pygame.transform.rotate(self.frames[0], 180)
-        self.frames[1] = pygame.transform.rotate(self.frames[1], 180)
+        self.frames[0] = pygame.transform.rotate(self.frames[0], 180).convert()
+        colorkey = self.frames[0].get_at((0,0))        
+        self.frames[0].set_colorkey(colorkey, pygame.RLEACCEL)
+        self.frames[1] = pygame.transform.rotate(self.frames[1], 180).convert()
+        colorkey = self.frames[1].get_at((0,0))        
+        self.frames[1].set_colorkey(colorkey, pygame.RLEACCEL)
+        
         self.hit_image = pygame.transform.rotate(self.hit_image, 180)
         self.life = 10
 
